@@ -19,7 +19,6 @@ class FaqPage extends StatelessWidget {
       body: ListView(
         children: [
           Positioned(
-            // left: 100,
             top: 100,
               child: Padding(
                 padding: const EdgeInsets.only(left: 15),
