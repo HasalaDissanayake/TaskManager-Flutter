@@ -25,7 +25,8 @@ class TaskForm extends StatefulWidget {
 }
 
 class _TaskFormState extends State<TaskForm> {
-  bool switchValue = false;
+  bool switchValueDate = false;
+  bool switchValueTime = false;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? selectedCategory;
@@ -52,7 +53,7 @@ class _TaskFormState extends State<TaskForm> {
     if (pickedDate != null && pickedDate != selectedDate) {
       setState(() {
         selectedDate = pickedDate;
-        switchValue = false; // Hide the calendar after selecting a date
+        switchValueDate = true; // Hide the calendar after selecting a date
       });
     }
   }
@@ -76,7 +77,7 @@ class _TaskFormState extends State<TaskForm> {
     if (pickedTime != null) {
       setState(() {
         selectedTime = pickedTime;
-        switchValue = false; // Hide the calendar after selecting a date
+        switchValueTime = true; // Hide the calendar after selecting a date
       });
     }
   }
@@ -252,11 +253,11 @@ class _TaskFormState extends State<TaskForm> {
                   ),
                   Spacer(),
                   DueDateSwitch(
-                    switchValue: switchValue,
+                    switchValue: switchValueDate,
                     onSwitched: (bool value) {
                       setState(() {
-                        switchValue = value;
-                        if (switchValue) {
+                        switchValueDate = value;
+                        if (switchValueDate) {
                           _selectDate(context);
                         }
                       });
@@ -294,11 +295,11 @@ class _TaskFormState extends State<TaskForm> {
                   ),
                   Spacer(),
                   DueTimeSwitch(
-                    switchValue: switchValue,
+                    switchValue: switchValueTime,
                     onSwitched: (bool value) {
                       setState(() {
-                        switchValue = value;
-                        if (switchValue) {
+                        switchValueTime = value;
+                        if (switchValueTime) {
                           _selectTime(context);
                         }
                       });
