@@ -334,7 +334,7 @@ class completed_tasks_list extends StatelessWidget {
           primary: Colors.black,
           minimumSize: Size(20, 80),
         ),
-        child: Icon(
+        child: const Icon(
           Icons.add,
           color: Colors.white, // Color of the plus sign (white)
           size: 50,
