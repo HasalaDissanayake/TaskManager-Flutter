@@ -1,36 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key});
+class AddTaskPage extends StatefulWidget {
+  const AddTaskPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const TaskForm(),
-    );
-  }
+  State<AddTaskPage> createState() => _AddTaskPageState();
 }
 
-class TaskForm extends StatefulWidget {
-  const TaskForm({Key? key}) : super(key: key);
+class _AddTaskPageState extends State<AddTaskPage> {
 
-  @override
-  _TaskFormState createState() => _TaskFormState();
-}
-
-class _TaskFormState extends State<TaskForm> {
   bool switchValueDate = false;
   bool switchValueTime = false;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   String? selectedCategory;
   String? selectedPriority;
+
+  bool switchDateValue = false;
+  bool onDateSwitched = false;
+  bool switchTimeValue = false;
+  bool onTimeSwitched = false;
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -82,54 +72,49 @@ class _TaskFormState extends State<TaskForm> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0.0,
-        backgroundColor: Colors.white,
-        title: const Text('ToDo'),
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // Implement navigation back logic here
+            Navigator.pop(context);
           },
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Image.asset(
-            'assets/images/todo_black.png',
-            width: 32.0,
-            height: 32.0,
+              'assets/images/todo_white.png',
+              width: 32.0,
+              height: 32.0,
             ),
           ),
         ],
+        toolbarHeight: 60,
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
+            const Padding(
               padding: EdgeInsets.all(16.0),
               child: Row(
                 children: [
                   Text(
                     'Create New Task',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
-                      fontSize: 35.0,
+                      fontSize: 40.0,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   SizedBox(width: 10.0),
-                  Image.asset(
-                  'assets/images/notebook.png',
-                  width: 50.0,
-                  height: 50.0,
+                  Icon(
+                    Icons.description,
+                    size: 50,
                   ),
                 ],
               ),
@@ -140,7 +125,6 @@ class _TaskFormState extends State<TaskForm> {
                 decoration: InputDecoration(
                   hintText: 'Enter task title',
                   hintStyle: TextStyle(
-                    fontFamily: 'Raleway',
                     fontSize: 18.0,
                     fontWeight: FontWeight.w500,
                   ),
@@ -163,7 +147,6 @@ class _TaskFormState extends State<TaskForm> {
                 decoration: InputDecoration(
                   hintText: 'Enter task description',
                   hintStyle: TextStyle(
-                    fontFamily: 'Raleway',
                     fontSize: 18.0,
                     fontWeight: FontWeight.w500,
                   ),
@@ -193,13 +176,12 @@ class _TaskFormState extends State<TaskForm> {
                   const Text(
                     'Select Category',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   DropdownButton<String>(
                     value: selectedCategory, // Add this line to set the selected value
                     items: <String>[
@@ -216,7 +198,6 @@ class _TaskFormState extends State<TaskForm> {
                         child: Text(
                           value,
                           style: const TextStyle(
-                            fontFamily: 'Raleway',
                             fontSize: 18.0,
                             fontWeight: FontWeight.w500,
                             color: Colors.black,
@@ -245,24 +226,13 @@ class _TaskFormState extends State<TaskForm> {
                   const Text(
                     'Pick Due Date',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
-                  Spacer(),
-                  DueDateSwitch(
-                    switchValue: switchValueDate,
-                    onSwitched: (bool value) {
-                      setState(() {
-                        switchValueDate = value;
-                        if (switchValueDate) {
-                          _selectDate(context);
-                        }
-                      });
-                    },
-                  ),
+                  const Spacer(),
+                  _dueDateSwitch(),
                 ],
               ),
             ),
@@ -287,24 +257,13 @@ class _TaskFormState extends State<TaskForm> {
                   const Text(
                     'Pick Due Time',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
-                  Spacer(),
-                  DueTimeSwitch(
-                    switchValue: switchValueTime,
-                    onSwitched: (bool value) {
-                      setState(() {
-                        switchValueTime = value;
-                        if (switchValueTime) {
-                          _selectTime(context);
-                        }
-                      });
-                    },
-                  ),
+                  const Spacer(),
+                  _dueTimeSwitch(),
                 ],
               ),
             ),
@@ -329,13 +288,12 @@ class _TaskFormState extends State<TaskForm> {
                   const Text(
                     'Attach File',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   GestureDetector(
                     onTap: () {
                       // Implement file upload logic here
@@ -388,13 +346,12 @@ class _TaskFormState extends State<TaskForm> {
                   const Text(
                     'Priority',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontSize: 18.0,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   DropdownButton<String>(
                     value: selectedPriority, // Add this line to set the selected value
                     items: <String>['High', 'Medium', 'Low'].map((String value) {
@@ -424,7 +381,6 @@ class _TaskFormState extends State<TaskForm> {
                             Text(
                               value,
                               style: const TextStyle(
-                                fontFamily: 'Raleway',
                                 fontSize: 18.0,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black,
@@ -463,7 +419,6 @@ class _TaskFormState extends State<TaskForm> {
                       child: Text(
                         'Create Task',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontSize: 18.0,
                           fontWeight: FontWeight.w500,
                           color: Colors.white,
@@ -516,55 +471,37 @@ class _TaskFormState extends State<TaskForm> {
       },
     );
   }
-}
 
-class DueDateSwitch extends StatefulWidget {
-  final bool switchValue;
-  final Function(bool) onSwitched;
-
-  const DueDateSwitch({
-    Key? key,
-    required this.switchValue,
-    required this.onSwitched,
-  });
-
-  @override
-  State<DueDateSwitch> createState() => _DueDateSwitchState();
-}
-
-class _DueDateSwitchState extends State<DueDateSwitch> {
-  @override
-  Widget build(BuildContext context) {
+  _dueDateSwitch() {
     return Switch(
-      value: widget.switchValue,
+      value: switchDateValue,
       activeColor: Colors.black,
-      onChanged: widget.onSwitched,
+      onChanged: (bool value) {
+        setState(() {
+          switchDateValue = value;
+          if (value) {
+            _selectDate(context);
+          }
+        });
+      },
     );
   }
-}
 
-class DueTimeSwitch extends StatefulWidget {
-  final bool switchValue;
-  final Function(bool) onSwitched;
-
-  const DueTimeSwitch({
-    Key? key,
-    required this.switchValue,
-    required this.onSwitched,
-  });
-
-  @override
-  State<DueTimeSwitch> createState() => _DueTimeSwitchState();
-}
-
-class _DueTimeSwitchState extends State<DueTimeSwitch> {
-  @override
-  Widget build(BuildContext context) {
+  _dueTimeSwitch() {
     return Switch(
-      value: widget.switchValue,
+      value: switchTimeValue,
       activeColor: Colors.black,
-      onChanged: widget.onSwitched,
+      onChanged: (bool value) {
+        setState(() {
+          switchTimeValue = value;
+          if (value) {
+            _selectTime(context);
+          }
+        });
+      },
     );
   }
+
 }
+
 

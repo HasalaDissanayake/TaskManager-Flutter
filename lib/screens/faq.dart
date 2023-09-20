@@ -1,78 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:accordion/accordion.dart';
 
-class FaqPage extends StatelessWidget {
+class FaqPage extends StatefulWidget {
   const FaqPage({super.key});
 
-  static const headerStyle = TextStyle(
-      color: Color(0xff000000), fontSize: 20, fontWeight: FontWeight.bold);
-  static const contentStyle = TextStyle(
-      color: Color(0xff999999), fontSize: 14, fontWeight: FontWeight.normal);
+  @override
+  State<FaqPage> createState() => _FaqPageState();
+}
 
-
+class _FaqPageState extends State<FaqPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(),
-      backgroundColor: Colors.white,
-      body: ListView(
-        children: [
-          Positioned(
-            top: 100,
+        appBar: _appBar(),
+        backgroundColor: Colors.white,
+        body: ListView(
+          children: [
+            const Positioned(
+              top: 100,
               child: Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Help &\nSupport',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 64,
-                        fontFamily: 'Raleway',
-                        fontWeight: FontWeight.w700,
+                  padding: EdgeInsets.only(left: 15),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.0, bottom: 10.0, left: 5.0, right: 5.0),
+                        child: Text(
+                          'Help & Support',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 40,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10, right: 20),
-                      child: SvgPicture.asset(
-                          'assets/icons/faq.svg',
-                          width: 70,
-                          height: 70,
+                      Padding(
+                        padding: EdgeInsets.only(top: 10, right: 20),
+                        child: Icon(
+                          Icons.quiz,
+                          size: 50,
+                        ),
                       ),
-                    ),
-                  ],
-                )
+                    ],
+                  )
               ),
-          ),
+            ),
 
-          Accordion(
-            children: generateAccordionSections(),
-          ),
-        ],
-      )
+            Accordion(
+              children: generateAccordionSections(),
+            ),
+          ],
+        )
     );
   }
 
-  AppBar appBar() {
+  _appBar() {
     return AppBar(
-      backgroundColor: Colors.white,
       elevation: 0.0,
-      leading: GestureDetector(
-        onTap: () {
-
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
         },
-        child: Container(
-          alignment: Alignment.center,
-          child: SvgPicture.asset(
-            'assets/icons/ArrowLeft.svg',
-            height: 40,
-            width: 40,
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/todo_white.png',
+            width: 32.0,
+            height: 32.0,
           ),
         ),
-      ),
+      ],
+      toolbarHeight: 60,
     );
   }
 
@@ -111,11 +113,19 @@ class FaqPage extends StatelessWidget {
 
         header: Text(
           '${index + 1}. ${questions[index]}',
-          style: headerStyle,
+          style: const TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold
+          ),
         ),
         content: Text(
           answers[index],
-          style: contentStyle,
+          style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 14,
+              fontWeight: FontWeight.normal
+          ),
         ),
       );
     });

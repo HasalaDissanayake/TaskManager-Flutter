@@ -1,365 +1,189 @@
 import 'package:flutter/material.dart';
 
-class completed_tasks_list extends StatelessWidget {
-  const completed_tasks_list({super.key});
+class CompletedTaskPage extends StatefulWidget {
+  const CompletedTaskPage({super.key});
+
+  @override
+  State<CompletedTaskPage> createState() => _CompletedTaskPageState();
+}
+
+class _CompletedTaskPageState extends State<CompletedTaskPage> {
+
+  final List<Map<String, dynamic>> taskList = [
+    {
+      'title': 'Go for a run',
+      'category': 'Health',
+      'time': '6:00 AM',
+      'priority': 'High',
+      'isDone': false,
+    },
+    {
+      'title': 'Buy groceries',
+      'category': 'Shopping',
+      'time': '8:00 AM',
+      'priority': 'Medium',
+      'isDone': false,
+    },
+    {
+      'title': 'Finish the design',
+      'category': 'Work',
+      'time': '10:00 AM',
+      'priority': 'High',
+      'isDone': false,
+    },
+    {
+      'title': 'Finish the presentation',
+      'category': 'Work',
+      'time': '2:00 PM',
+      'priority': 'Medium',
+      'isDone': false,
+    },
+    {
+      'title': 'Go to the gym',
+      'category': 'Health',
+      'time': '4:00 PM',
+      'priority': 'Low',
+      'isDone': false,
+    },
+    {
+      'title': 'Watch a movie',
+      'category': 'Entertainment',
+      'time': '6:00 PM',
+      'priority': 'Low',
+      'isDone': false,
+    },
+    {
+      'title': 'Read a book',
+      'category': 'Education',
+      'time': '8:00 PM',
+      'priority': 'Low',
+      'isDone': false,
+    },
+    {
+      'title': 'Go to sleep',
+      'category': 'Health',
+      'time': '10:00 PM',
+      'priority': 'High',
+      'isDone': false,
+    },
+  ];
+
+  //icons for the categories
+  final categoryIcons = {
+    'Health': Icons.health_and_safety,
+    'Work': Icons.work,
+    'Finance': Icons.account_balance_wallet,
+    'Education': Icons.school,
+    'Travel': Icons.hiking,
+    'Shopping': Icons.shopping_cart,
+    'Entertainment': Icons.sports_esports,
+    'Other': Icons.more_horiz,
+  };
+
+  //colors for the categories
+  final priorityColors = {
+    'High': Colors.red,
+    'Medium': Colors.orange,
+    'Low': Colors.green,
+  };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        child: Container(
-          height: 800,
-          child: Column(
-            children: [
-              titleBar(),
-              tasksList(),
-              addTaskButton(),
-            ],
-          ),
-        ),
-      ),
+      appBar: _appBar(),
+      body: _tasksList(),
     );
   }
 
-
-  Widget titleBar() {
-    return Container(
-        margin: EdgeInsets.only(
-          left: 20,
-          bottom: 100,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Completed\nList',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 48,
-                  fontFamily: 'Raleway',
-                  fontWeight: FontWeight.w700,
-                  height: 0,
-                  letterSpacing: 1.68,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.task,
-              color: Colors.black,
-              size: 80,
-            )
-          ],
-        ));
-  }
-
-  Widget sortButton() {
-    return Container(
-      margin: EdgeInsets.only(
-        top: 30,
-        left: 300,
-        bottom: 50,
+  _appBar() {
+    return AppBar(
+      elevation: 0.0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
+        },
       ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.filter_list,
-            color: Colors.black,
-            size: 30,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/todo_white.png',
+            width: 32.0,
+            height: 32.0,
           ),
-          Container(
-            margin: EdgeInsets.only(
-              left: 5,
-            ),
-            child: Text(
-              'Sort',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.w600,
-                height: 0,
-                letterSpacing: -0.26,
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget tasksList() {
-    return Table(
-      columnWidths: {
-        0: FlexColumnWidth(1.05), // Adjust the width of the first column
-        1: FlexColumnWidth(1.0), // Adjust the width of the second column
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: [
-        TableRow(
-          children: [
-            TableCell(
-                child: Container(
-                  // width: 100,
-                  margin: EdgeInsets.only(left: 30),
-                  padding: EdgeInsets.only(
-                    top: 20,
-                    bottom: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Sweep the floor/vacuum',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          height: 0,
-                          letterSpacing: -0.36,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            TableCell(
-              child: Container(
-                margin: EdgeInsets.only(
-                  left: 140,
-                ),
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.cleaning_services,
-                      color: Colors.black,
-                      size: 25,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        TableRow(
-          children: [
-            TableCell(
-                child: Container(
-                  margin: EdgeInsets.only(left: 30),
-                  padding: EdgeInsets.only(
-                    top: 20,
-                    bottom: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Clean the room',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          height: 0,
-                          letterSpacing: -0.36,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            TableCell(
-              child: Container(
-                margin: EdgeInsets.only(
-                  left: 140,
-                ),
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.cleaning_services,
-                      color: Colors.black,
-                      size: 25,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        TableRow(
-          children: [
-            TableCell(
-                child: Container(
-                  margin: EdgeInsets.only(left: 30),
-                  padding: EdgeInsets.only(
-                    top: 20,
-                    bottom: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Workout',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          height: 0,
-                          letterSpacing: -0.36,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            TableCell(
-              child: Container(
-                margin: EdgeInsets.only(
-                  left: 140,
-                ),
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.fitness_center,
-                      color: Colors.black,
-                      size: 25,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        TableRow(
-          children: [
-            TableCell(
-                child: Container(
-                  margin: EdgeInsets.only(left: 30),
-                  padding: EdgeInsets.only(
-                    top: 20,
-                    bottom: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Go shopping with friends',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          height: 0,
-                          letterSpacing: -0.36,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            TableCell(
-              child: Container(
-                margin: EdgeInsets.only(
-                  left: 140,
-                ),
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.shopping_cart,
-                      color: Colors.black,
-                      size: 25,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        TableRow(
-          children: [
-            TableCell(
-                child: Container(
-                  margin: EdgeInsets.only(left: 30),
-                  padding: EdgeInsets.only(
-                    top: 20,
-                    bottom: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Study HCI',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          height: 0,
-                          letterSpacing: -0.36,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-            TableCell(
-              child: Container(
-                margin: EdgeInsets.only(
-                  left: 140,
-                ),
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.book,
-                      color: Colors.black,
-                      size: 25,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ],
+      toolbarHeight: 60,
     );
   }
 
-
-  Widget addTaskButton() {
-    return ClipOval(
-      child: ElevatedButton(
-        onPressed: () {
-          // Add your logic to handle adding a new task here
-        },
-        style: ElevatedButton.styleFrom(
-          primary: Colors.black,
-          minimumSize: Size(20, 80),
+  _tasksList() {
+    return Stack(
+      children: [
+        ListView(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Text(
+                    'Completed List',
+                    style: TextStyle(
+                      fontSize: 42.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(width: 10.0),
+                  Icon(
+                    Icons.task,
+                    size: 50,
+                  ),
+                ],
+              ),
+            ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: taskList.length,
+                  itemBuilder: (context, index) {
+                    final task = taskList[index];
+                    return ListTile(
+                        title: Text(
+                          "${task['title']}",
+                          style: TextStyle(
+                            color: task['isDone'] ? Colors.grey : Colors.black,
+                            fontSize: 20.0,
+                            decoration: task['isDone']
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                          ),
+                        ),
+                        subtitle: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: 5,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                color: priorityColors[task['priority']],
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Icon(
+                          categoryIcons[task['category']],
+                          color: Colors.black,
+                        ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 30.0),
+                      );
+                  },
+                ),
+              ],
         ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white, // Color of the plus sign (white)
-          size: 50,
-        ),
-      ),
+      ]
     );
   }
 
-
-
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(
-            Icons.arrow_back_ios,
-            color: Colors.black,
-            size: 25,
-          )
-        ],
-      ),
-    );
-  }
 }
