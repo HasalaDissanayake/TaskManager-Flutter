@@ -2,15 +2,15 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:taskmanager/screens/add_new_task.dart';
-import 'package:taskmanager/screens/completed_tasks_list.dart';
-import 'package:taskmanager/screens/faq.dart';
+import 'package:taskmanager/Database/db_helper.dart';
 import 'package:taskmanager/screens/home_page.dart';
 import 'package:taskmanager/screens/theme.dart';
 
 Future<void> main() async {
   // await the initialization until GetStorage in setup
   WidgetsFlutterBinding.ensureInitialized();
+  //init db
+  await DBHelper.initDb();
   await GetStorage.init();
   runApp(const MyApp());
 }
@@ -26,11 +26,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: Themes.theme,
       home: const SplashScreen(),
-      routes: {
-        '/faq' : (context) => const FaqPage(),
-        '/addNewTask' : (context) => const AddTaskPage(),
-        '/completedTasks' : (context) => const CompletedTaskPage()
-      },
     );
   }
 }

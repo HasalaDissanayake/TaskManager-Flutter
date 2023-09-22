@@ -1,10 +1,14 @@
+import 'package:date_picker_timeline/date_picker_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:taskmanager/services/notification_service.dart';
-// import 'package:pdf/pdf.dart';
-// import 'package:pdf/widgets.dart' as pdfLib;
+import 'package:taskmanager/screens/add_new_task.dart';
+import 'package:taskmanager/screens/faq.dart';
+import 'package:taskmanager/screens/task_view.dart';
+
+import 'package:taskmanager/controllers/task_controller.dart';
+import 'completed_tasks_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,64 +19,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  final List<Map<String, dynamic>> taskList = [
-    {
-      'title': 'Go for a run',
-      'category': 'Health',
-      'time': '6:00 AM',
-      'priority': 'High',
-      'isDone': false,
-    },
-    {
-      'title': 'Buy groceries',
-      'category': 'Shopping',
-      'time': '8:00 AM',
-      'priority': 'Medium',
-      'isDone': false,
-    },
-    {
-      'title': 'Finish the design',
-      'category': 'Work',
-      'time': '10:00 AM',
-      'priority': 'High',
-      'isDone': false,
-    },
-    {
-      'title': 'Finish the presentation',
-      'category': 'Work',
-      'time': '2:00 PM',
-      'priority': 'Medium',
-      'isDone': false,
-    },
-    {
-      'title': 'Go to the gym',
-      'category': 'Health',
-      'time': '4:00 PM',
-      'priority': 'Low',
-      'isDone': false,
-    },
-    {
-      'title': 'Watch a movie',
-      'category': 'Entertainment',
-      'time': '6:00 PM',
-      'priority': 'Low',
-      'isDone': false,
-    },
-    {
-      'title': 'Read a book',
-      'category': 'Education',
-      'time': '8:00 PM',
-      'priority': 'Low',
-      'isDone': false,
-    },
-    {
-      'title': 'Go to sleep',
-      'category': 'Health',
-      'time': '10:00 PM',
-      'priority': 'High',
-      'isDone': false,
-    },
-  ];
+  final _taskController = Get.put(TaskController());
+
+  final _searchController = TextEditingController();
 
   //icons for the categories
   final categoryIcons = {
@@ -93,16 +42,20 @@ class _HomePageState extends State<HomePage> {
     'Low': Colors.green,
   };
 
+  DateTime? selectedDate = DateTime.now();
+  int? selectedPriority;
+
+  @override
+  void initState() {
+    super.initState();
+    _taskController.getTasks();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(),
-      body: GestureDetector(
-        onTap: () {
-          Slidable.of(context)?.close();
-        },
-        child: _todoScreen(),
-      )
+      body: _todoScreen()
     );
   }
 
@@ -137,19 +90,30 @@ class _HomePageState extends State<HomePage> {
       actions: [
         Row(
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 20.0),
-              width: 180, // Adjust the width as needed
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15.0),
+            GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 20.0),
+                width: 180, // Adjust the width as needed
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchController.text = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    contentPadding: const EdgeInsets.only(left: 10.0, right: 10, top: 5, bottom: 5),
+                    prefixIcon: const Icon(Icons.search),
                   ),
-                  contentPadding: const EdgeInsets.only(left: 10.0, right: 10, top: 5, bottom: 5),
-                  prefixIcon: const Icon(Icons.search),
                 ),
               ),
             ),
@@ -175,11 +139,6 @@ class _HomePageState extends State<HomePage> {
   //private function for todolist
   _todoScreen() {
 
-    final now = DateTime.now();
-    final startOfWeek = now;
-    final weekDates = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
-    final weekDaysName = weekDates.map((date) => DateFormat('E').format(date)).toList();
-
     return Stack(
       children: [
         ListView(
@@ -196,68 +155,32 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    // Display the days of the week with dates in a grid
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SizedBox(
-                        height: 60,
-                        child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 7, // 2 columns
-                          ),
-                          itemCount: weekDaysName.length,
-                          itemBuilder: (context, index) {
-                            final dayName = weekDaysName[index];
-                            final date = weekDates[index].day.toString();
-
-                            final isToday = date ==
-                                now.day
-                                    .toString(); // Check if it's today's date
-
-                            return Column(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: isToday
-                                        ? Colors.white
-                                        : Colors
-                                        .black, // Highlighted background color
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        dayName,
-                                        style: TextStyle(
-                                          color: isToday
-                                              ? Colors.black
-                                              : Colors.white,
-                                          fontSize: 16.0,
-                                          fontWeight: isToday
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                      Text(
-                                        date,
-                                        style: TextStyle(
-                                          color: isToday
-                                              ? Colors.black
-                                              : Colors.white,
-                                          fontSize: 16.0,
-                                          fontWeight: isToday
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                    // date-picker widget for scrollable date timeline
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 5.0),
+                      child: DatePicker(
+                        DateTime.now(),
+                        initialSelectedDate: selectedDate,
+                        selectionColor: Colors.white,
+                        selectedTextColor: Colors.black,
+                        dateTextStyle: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
                         ),
+                        monthTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                        dayTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                        onDateChange: (date) {
+                          // New date selected
+                          setState(() {
+                            selectedDate = date;
+                          });
+                        },
                       ),
                     ),
                   ],
@@ -270,37 +193,38 @@ class _HomePageState extends State<HomePage> {
                 // Three Circles for Priority
                 Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.all(8.0),
-                          height: 20,
-                          width: 20,
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20.0),
+                      child: Wrap(
+                        children: List<Widget>.generate(
+                          3,
+                              (int index) {
+                            return GestureDetector(
+                              onTap:  (){
+                                setState(() {
+                                  if(selectedPriority != null && selectedPriority==index) {
+                                    selectedPriority = null;
+                                  } else{
+                                    selectedPriority = index;
+                                  }
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: CircleAvatar(
+                                  radius: 10, // Corrected typo here
+                                  backgroundColor: index == 0 ? Colors.red : index == 1 ? Colors.orange : Colors.green,
+                                  child: selectedPriority==index ? const Icon(
+                                    Icons.done,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ): null,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        Container(
-                          margin: const EdgeInsets.all(8.0),
-                          height: 20,
-                          width: 20,
-                          decoration: const BoxDecoration(
-                            color: Colors.orange,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.all(8.0),
-                          height: 20,
-                          width: 20,
-                          decoration: const BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(),
@@ -311,12 +235,9 @@ class _HomePageState extends State<HomePage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               elevation: 0.0,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25.0)
-                              ),
                             ),
                             onPressed: () {
-                              Navigator.pushNamed(context, '/completedTasks');
+                              Get.to(() => const CompletedTaskPage());
                             },
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -371,74 +292,119 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: taskList.length,
-                  itemBuilder: (context, index) {
-                    final task = taskList[index];
-                    return Slidable(
-                      actionPane: const SlidableDrawerActionPane(),
-                      actionExtentRatio: 0.15,
-                      secondaryActions: <Widget>[
-                        IconSlideAction(
-                          caption: 'Delete',
-                          color: Colors.black,
-                          icon: Icons.delete,
-                          onTap: () {
-                            setState(() {
-                              taskList.removeAt(index);
-                            });
-                          },
-                        ),
-                      ],
-                      child: ListTile(
-                        leading: Transform.scale(
-                          scale: 1.4,
-                          child: Checkbox(
-                            value: task['isDone'],
-                            checkColor: Colors.white,
-                            activeColor: Colors.black,
-                            shape: const CircleBorder(),
-                            onChanged: (bool? newValue) {
-                              setState(() {
-                                task['isDone'] = newValue ??
-                                    false;
-                              });
+                Obx(() {
+
+                  var incompleteTasks = _taskController.taskList.where((task) => task.isCompleted == 0).toList();
+                  var searchQuery = _searchController.text.toLowerCase();
+
+                  if (selectedPriority != null) {
+                    if (selectedPriority == 0) {
+                      incompleteTasks = incompleteTasks.where((task) => task.priority == "High").toList();
+                    } else if (selectedPriority == 1) {
+                      incompleteTasks = incompleteTasks.where((task) => task.priority == "Medium").toList();
+                    } else if (selectedPriority == 2) {
+                      incompleteTasks = incompleteTasks.where((task) => task.priority == "Low").toList();
+                    }
+                  }
+
+                  // to catch the search phrase
+                  if(searchQuery.isNotEmpty){
+                    incompleteTasks = incompleteTasks.where((task) => task.taskTitle!.toLowerCase().contains(searchQuery)).toList();
+                  }
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: incompleteTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = incompleteTasks[index];
+                      print(task.toJson());
+                      if(task.taskDate == "${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}") {
+                        return GestureDetector(
+                            onTap: () {
+                              Get.to(() => const TaskPageView(),
+                              arguments: task,
+                              );
                             },
-                          ),
-                        ),
-                        title: Text(
-                          "${task['title']}",
-                          style: TextStyle(
-                            color: task['isDone'] ? Colors.grey : Colors.black,
-                            fontSize: 20.0,
-                            decoration: task['isDone']
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                          ),
-                        ),
-                        subtitle: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              height: 5,
-                              width: 24,
-                              decoration: BoxDecoration(
-                                color: priorityColors[task['priority']],
-                                borderRadius: BorderRadius.circular(10.0),
+                            child: Slidable(
+                              actionPane: const SlidableDrawerActionPane(),
+                              actionExtentRatio: 0.15,
+                              secondaryActions: <Widget>[
+                                IconSlideAction(
+                                  caption: 'Delete',
+                                  color: Colors.black,
+                                  icon: Icons.delete,
+                                  onTap: () {
+                                    _taskController.deleteTask(task);
+                                    _taskController.getTasks();
+                                  },
+                                ),
+                              ],
+                              child: ListTile(
+                                leading: Transform.scale(
+                                  scale: 1.4,
+                                  child: Checkbox(
+                                    value: false,
+                                    checkColor: Colors.white,
+                                    activeColor: Colors.black,
+                                    shape: const CircleBorder(),
+                                    onChanged: (bool? ticked) {
+                                      _taskController.markTaskCompleted(task.taskId);
+                                      _taskController.getTasks();
+                                    },
+                                  ),
+                                ),
+                                title: Text(
+                                  "${task.taskTitle}",
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 20.0,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                                subtitle: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      height: 5,
+                                      width: 24,
+                                      decoration: BoxDecoration(
+                                        color: priorityColors[task.priority],
+                                        borderRadius: BorderRadius.circular(10.0),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 15),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          task.taskDescription!.isNotEmpty ? Icons.menu : null,
+                                          color: Colors.black,
+                                          size: 12,
+                                        ),
+                                        const SizedBox(width: 15),
+                                        Icon(
+                                          task.attachment != null ? Icons.attachment : null,
+                                          color: Colors.black,
+                                          size: 12,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                trailing: Icon(
+                                  categoryIcons[task.category],
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                        trailing: Icon(
-                          categoryIcons[task['category']],
-                          color: Colors.black,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                          );
+                      } else {
+                        return Container();
+                      }
+                    }
+                  );
+                }),
               ],
             ),
           ],
@@ -451,7 +417,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               FloatingActionButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/faq');
+                  Get.to(() => const FaqPage());
                 },
                 tooltip: 'FAQ',
                 backgroundColor: Colors.black,
@@ -460,8 +426,9 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(width: 16.0), // Add some spacing between buttons
               FloatingActionButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/addNewTask');
+                onPressed: () async{
+                  await Get.to(() => const AddTaskPage());
+                  _taskController.getTasks();
                 },
                 tooltip: 'Add a new task',
                 backgroundColor: Colors.black,
@@ -497,14 +464,14 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   children: [
                     const Icon(
-                      Icons.file_upload,
+                      Icons.file_copy_outlined,
                       size: 50,
                       color: Colors.grey,
                     ),
                     ElevatedButton(
                       onPressed: () {
                         // Handle import logic
-                        Navigator.pop(context); // Close the dialog
+                        Get.back(); // Close the dialog
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
@@ -529,7 +496,7 @@ class _HomePageState extends State<HomePage> {
               ElevatedButton(
                 onPressed: () {
                   // Handle export logic
-                  Navigator.pop(context); // Close the dialog
+                  Get.back(); // Close the dialog
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,

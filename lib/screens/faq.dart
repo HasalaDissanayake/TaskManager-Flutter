@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:accordion/accordion.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 
 class FaqPage extends StatefulWidget {
   const FaqPage({super.key});
@@ -16,34 +18,23 @@ class _FaqPageState extends State<FaqPage> {
         backgroundColor: Colors.white,
         body: ListView(
           children: [
-            const Positioned(
-              top: 100,
-              child: Padding(
-                  padding: EdgeInsets.only(left: 15),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: 10.0, bottom: 10.0, left: 5.0, right: 5.0),
-                        child: Text(
-                          'Help & Support',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 40,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(top: 10, right: 20),
-                        child: Icon(
-                          Icons.quiz,
-                          size: 50,
-                        ),
-                      ),
-                    ],
-                  )
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Text(
+                    'Help & Support',
+                    style: TextStyle(
+                      fontSize: 42.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(width: 10.0),
+                  Icon(
+                    Icons.quiz,
+                    size: 50,
+                  ),
+                ],
               ),
             ),
 
@@ -61,7 +52,7 @@ class _FaqPageState extends State<FaqPage> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.pop(context);
+          Get.back();
         },
       ),
       actions: [

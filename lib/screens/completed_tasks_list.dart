@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:taskmanager/screens/task_view.dart';
+import 'package:taskmanager/controllers/task_controller.dart';
 
 class CompletedTaskPage extends StatefulWidget {
   const CompletedTaskPage({super.key});
@@ -9,64 +12,7 @@ class CompletedTaskPage extends StatefulWidget {
 
 class _CompletedTaskPageState extends State<CompletedTaskPage> {
 
-  final List<Map<String, dynamic>> taskList = [
-    {
-      'title': 'Go for a run',
-      'category': 'Health',
-      'time': '6:00 AM',
-      'priority': 'High',
-      'isDone': false,
-    },
-    {
-      'title': 'Buy groceries',
-      'category': 'Shopping',
-      'time': '8:00 AM',
-      'priority': 'Medium',
-      'isDone': false,
-    },
-    {
-      'title': 'Finish the design',
-      'category': 'Work',
-      'time': '10:00 AM',
-      'priority': 'High',
-      'isDone': false,
-    },
-    {
-      'title': 'Finish the presentation',
-      'category': 'Work',
-      'time': '2:00 PM',
-      'priority': 'Medium',
-      'isDone': false,
-    },
-    {
-      'title': 'Go to the gym',
-      'category': 'Health',
-      'time': '4:00 PM',
-      'priority': 'Low',
-      'isDone': false,
-    },
-    {
-      'title': 'Watch a movie',
-      'category': 'Entertainment',
-      'time': '6:00 PM',
-      'priority': 'Low',
-      'isDone': false,
-    },
-    {
-      'title': 'Read a book',
-      'category': 'Education',
-      'time': '8:00 PM',
-      'priority': 'Low',
-      'isDone': false,
-    },
-    {
-      'title': 'Go to sleep',
-      'category': 'Health',
-      'time': '10:00 PM',
-      'priority': 'High',
-      'isDone': false,
-    },
-  ];
+  final _taskController = Get.put(TaskController());
 
   //icons for the categories
   final categoryIcons = {
@@ -88,6 +34,12 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _taskController.getTasks();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(),
@@ -101,7 +53,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.pop(context);
+          Get.back();
         },
       ),
       actions: [
@@ -142,44 +94,71 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
                 ],
               ),
             ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: taskList.length,
-                  itemBuilder: (context, index) {
-                    final task = taskList[index];
-                    return ListTile(
-                        title: Text(
-                          "${task['title']}",
-                          style: TextStyle(
-                            color: task['isDone'] ? Colors.grey : Colors.black,
-                            fontSize: 20.0,
-                            decoration: task['isDone']
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                          ),
-                        ),
-                        subtitle: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              height: 5,
-                              width: 24,
-                              decoration: BoxDecoration(
-                                color: priorityColors[task['priority']],
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
+                Obx(() {
+
+                  final completedTasks = _taskController.taskList.where((task) => task.isCompleted == 1).toList();
+
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: completedTasks.length,
+                    itemBuilder: (context, index) {
+                      final task = completedTasks[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Get.to(() => const TaskPageView(),
+                            arguments: task,
+                          );
+                        },
+                        child: ListTile(
+                          title: Text(
+                            "${task.taskTitle}",
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 20.0,
+                              decoration: TextDecoration.none,
                             ),
-                          ],
+                          ),
+                          subtitle: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 5,
+                                width: 24,
+                                decoration: BoxDecoration(
+                                  color: priorityColors[task.priority],
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                              ),
+                              const SizedBox(width: 15),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    task.taskDescription!.isNotEmpty ? Icons.menu : null,
+                                    color: Colors.black,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Icon(
+                                    task.attachment != null ? Icons.attachment : null,
+                                    color: Colors.black,
+                                    size: 12,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          trailing: Icon(
+                            categoryIcons[task.category],
+                            color: Colors.black,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 30.0),
                         ),
-                        trailing: Icon(
-                          categoryIcons[task['category']],
-                          color: Colors.black,
-                        ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 30.0),
                       );
-                  },
-                ),
+                    },
+                  );
+                }),
               ],
         ),
       ]

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
-import 'package:taskmanager/models/task.dart';
 
-class AddTaskPage extends StatefulWidget {
-  const AddTaskPage({super.key});
+class TaskPageView extends StatefulWidget {
+  const TaskPageView({super.key});
 
   @override
-  State<AddTaskPage> createState() => _AddTaskPageState();
+  State<TaskPageView> createState() => _TaskPageViewState();
 }
 
-class _AddTaskPageState extends State<AddTaskPage> {
+class _TaskPageViewState extends State<TaskPageView> {
 
-  final _taskController = Get.put(TaskController());
+  final TaskController _taskController = Get.put(TaskController());
 
   final  _titleController = TextEditingController();
   final  _descriptionController = TextEditingController();
@@ -25,6 +25,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   TimeOfDay selectedTime = TimeOfDay.now();
   bool switchDateValue = false;
   bool switchTimeValue = false;
+  bool isCompleted = false;
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -60,8 +61,34 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
+  //convert string to TimeOfDay
+  TimeOfDay stringToTimeOfDay(String timeString) {
+    List<String> parts = timeString.split(':');
+    int hours = int.parse(parts[0]);
+    int minutes = int.parse(parts[1]);
+    return TimeOfDay(hour: hours, minute: minutes);
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    // assigned the db values
+    final task = Get.arguments;
+    _titleController.text = task.taskTitle;
+    _descriptionController.text = task.taskDescription ?? "";
+    selectedCategory = task.category;
+
+    //convert string to DateTime
+    String dateString = task.taskDate;
+    DateFormat format = DateFormat("dd/M/yyyy");
+    DateTime dateTime = format.parse(dateString);
+    selectedDate = dateTime;
+    isCompleted = task.isCompleted == 0 ? false : true;
+
+    selectedTime = stringToTimeOfDay(task.taskTime);
+    selectedPriority = task.priority;
+    selectedReminder = task.remind;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0.0,
@@ -87,20 +114,20 @@ class _AddTaskPageState extends State<AddTaskPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
                   Text(
-                    'Create New Task',
-                    style: TextStyle(
+                    "${task.taskTitle}",
+                    style: const TextStyle(
                       fontSize: 40.0,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(width: 10.0),
-                  Icon(
-                    Icons.description,
+                  const SizedBox(width: 10.0),
+                  const Icon(
+                    Icons.rate_review,
                     size: 50,
                   ),
                 ],
@@ -110,6 +137,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 controller: _titleController,
+                enabled: isCompleted ? false : true,
                 decoration: const InputDecoration(
                   hintText: 'Enter task title',
                   hintStyle: TextStyle(
@@ -133,6 +161,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 controller: _descriptionController,
+                enabled: isCompleted ? false : true,
                 decoration: const InputDecoration(
                   hintText: 'Enter task description',
                   hintStyle: TextStyle(
@@ -195,11 +224,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (String? value) {
+                    onChanged: !isCompleted ? (String? value) {
                       setState(() {
                         selectedCategory = value; // Update the selected value
                       });
-                    },
+                    } : null,
                   ),
                 ],
               ),
@@ -380,11 +409,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (String? value) {
+                    onChanged: !isCompleted ? (String? value) {
                       setState(() {
                         selectedPriority = value!; // Update the selected value
                       });
-                    },
+                    } : null,
                   ),
                 ],
               ),
@@ -424,23 +453,23 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (String? value) {
+                    onChanged: !isCompleted ? (String? value) {
                       setState(() {
                         selectedReminder = value; // Update the selected value
                       });
-                    },
+                    } : null,
                   ),
                 ],
               ),
             ),
-            //create task button
+            //update task button
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: GestureDetector(
                 onTap: () {
                   _validateForm();
                 },
-                child: Container(
+                child: !isCompleted ? Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 40.0,
                     vertical: 8.0,
@@ -451,7 +480,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   ),
                   child: const Center(
                       child: Text(
-                        'Create Task',
+                        'Update Task',
                         style: TextStyle(
                           fontSize: 18.0,
                           fontWeight: FontWeight.w500,
@@ -459,7 +488,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                         ),
                       )
                   ),
-                ),
+                ) : Container(),
               ),
             ),
           ],
@@ -558,35 +587,23 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   _validateForm() {
     if(_titleController.text.isNotEmpty){
-      _addDataToDatabase();
+      _updateDatabase();
       Get.back();
     } else if (_titleController.text.isEmpty) {
       Get.snackbar("Required", "All fields are required !",
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.white,
-        icon: const Icon(
-          Icons.warning_amber_rounded
-        )
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.white,
+          icon: const Icon(
+              Icons.warning_amber_rounded
+          )
       );
     }
 
   }
 
-  // adding data to database
-  _addDataToDatabase() async {
-    await _taskController.addTask(
-      task: Task(
-          taskTitle: _titleController.text,
-          taskDescription: _descriptionController.text,
-          category: selectedCategory,
-          taskDate: "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-          taskTime: "${selectedTime.hour}:${selectedTime.minute}",
-          attachment: null,
-          priority: selectedPriority,
-          remind: selectedReminder,
-          isCompleted: 0,
-      )
-    );
+  // update database
+  _updateDatabase() {
+
   }
 
   _dueDateSwitch() {
