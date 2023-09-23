@@ -518,6 +518,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
+  // don't remove the below code needed for referencing
+
   // void _showUploadDialog(BuildContext context) {
   //   showDialog(
   //     context: context,
