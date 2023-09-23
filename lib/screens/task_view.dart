@@ -23,8 +23,8 @@ class _TaskPageViewState extends State<TaskPageView> {
 
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
-  bool switchDateValue = false;
-  bool switchTimeValue = false;
+  bool switchDateValue = true;
+  bool switchTimeValue = true;
   bool isCompleted = false;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -34,7 +34,6 @@ class _TaskPageViewState extends State<TaskPageView> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
-
     if (pickedDate != null) {
       setState(() {
         selectedDate = pickedDate!;
@@ -162,18 +161,18 @@ class _TaskPageViewState extends State<TaskPageView> {
               child: TextField(
                 controller: _descriptionController,
                 enabled: isCompleted ? false : true,
-                decoration: const InputDecoration(
-                  hintText: 'Enter task description',
-                  hintStyle: TextStyle(
+                decoration: InputDecoration(
+                  hintText: !isCompleted ? 'Enter task description' : 'No description',
+                  hintStyle: const TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.w500,
                   ),
-                  enabledBorder: UnderlineInputBorder(
+                  enabledBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.grey,
                     ),
                   ),
-                  focusedBorder: UnderlineInputBorder(
+                  focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.grey,
                     ),
@@ -598,7 +597,6 @@ class _TaskPageViewState extends State<TaskPageView> {
           )
       );
     }
-
   }
 
   // update database
