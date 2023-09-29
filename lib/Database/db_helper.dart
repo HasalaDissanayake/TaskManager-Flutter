@@ -1,31 +1,30 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:taskmanager/models/task.dart';
 
-class DBHelper{
-
+class DBHelper {
   static Database? _db;
   static const int _version = 1;
   static const String _tableName = "tasks";
 
   static Future<void> initDb() async {
-    if(_db != null) {
+    if (_db != null) {
       return;
     }
     try {
       String _path = "${await getDatabasesPath()}/task_database.db";
       _db = await openDatabase(
-          _path,
-          version: _version,
-          onCreate: (db, version) {
-            print("Database is creating");
-            return db.execute(
-              "CREATE TABLE $_tableName("
-                  "task_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                  "task_title STRING, task_description TEXT, category STRING, "
-                  "task_date STRING, task_time STRING, priority STRING, "
-                  "remind INTEGER, is_completed INTEGER, attachment BLOB)",
-            );
-          },
+        _path,
+        version: _version,
+        onCreate: (db, version) {
+          print("Database is creating");
+          return db.execute(
+            "CREATE TABLE $_tableName("
+            "task_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "task_title STRING, task_description TEXT, category STRING, "
+            "task_date STRING, task_time STRING, priority STRING, "
+            "remind INTEGER, is_completed INTEGER, attachment BLOB)",
+          );
+        },
       );
     } catch (e) {
       print(e);
@@ -43,7 +42,7 @@ class DBHelper{
   }
 
   //to delete a task
-  static delete(Task task) async{
+  static delete(Task task) async {
     await _db!.delete(_tableName, where: 'task_id=?', whereArgs: [task.taskId]);
   }
 
@@ -56,4 +55,9 @@ class DBHelper{
     ''', [1, taskId]);
   }
 
+  static Future<int> update(Task? task) async {
+    return await _db?.update(_tableName, task!.toJson(),
+            where: 'task_id=?', whereArgs: [task.taskId]) ??
+        0;
+  }
 }

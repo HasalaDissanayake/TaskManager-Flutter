@@ -1,18 +1,18 @@
 import 'package:get/get.dart';
 import 'package:taskmanager/Database/db_helper.dart';
+
 import '../models/task.dart';
 
-class TaskController extends GetxController{
-
+class TaskController extends GetxController {
   @override
-  void onReady(){
+  void onReady() {
     super.onReady();
   }
 
   // observable variable
   var taskList = <Task>[].obs;
 
-  Future<int> addTask({Task? task}) async{
+  Future<int> addTask({Task? task}) async {
     return await DBHelper.insert(task);
   }
 
@@ -25,8 +25,11 @@ class TaskController extends GetxController{
     await DBHelper.delete(task);
   }
 
-  void markTaskCompleted(int? taskId) async{
+  void markTaskCompleted(int? taskId) async {
     await DBHelper.updateState(taskId!);
   }
 
+  Future<int> updateTask({Task? task}) async {
+    return await DBHelper.update(task);
+  }
 }

@@ -1,13 +1,13 @@
 import 'package:date_picker_timeline/date_picker_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:taskmanager/controllers/task_controller.dart';
 import 'package:taskmanager/screens/add_new_task.dart';
 import 'package:taskmanager/screens/faq.dart';
 import 'package:taskmanager/screens/task_view.dart';
 
-import 'package:taskmanager/controllers/task_controller.dart';
 import 'completed_tasks_list.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,7 +18,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   final _taskController = Get.put(TaskController());
 
   final _searchController = TextEditingController();
@@ -53,20 +52,18 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _appBar(),
-      body: _todoScreen()
-    );
+    return Scaffold(appBar: _appBar(), body: _todoScreen());
   }
 
   // private function for appbar
   _appBar() {
     return AppBar(
-      title:  Column(
+      title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left:0.0,top:5.0,bottom:5.0,right:0.0),
+            padding: const EdgeInsets.only(
+                left: 0.0, top: 5.0, bottom: 5.0, right: 0.0),
             child: Text(
               DateFormat('MMM d, y').format(DateTime.now()),
               style: TextStyle(
@@ -76,7 +73,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left:0.0,top:5.0,bottom:5.0,right:0.0),
+            padding: const EdgeInsets.only(
+                left: 0.0, top: 5.0, bottom: 5.0, right: 0.0),
             child: Text(
               'Today',
               style: TextStyle(
@@ -111,22 +109,21 @@ class _HomePageState extends State<HomePage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15.0),
                     ),
-                    contentPadding: const EdgeInsets.only(left: 10.0, right: 10, top: 5, bottom: 5),
+                    contentPadding: const EdgeInsets.only(
+                        left: 10.0, right: 10, top: 5, bottom: 5),
                     prefixIcon: const Icon(Icons.search),
                   ),
                 ),
               ),
             ),
             IconButton(
-              padding: const EdgeInsets.only(right: 20.0,left: 10.0),
+              padding: const EdgeInsets.only(right: 20.0, left: 10.0),
               icon: const Icon(
-                  Icons.filter_list,
-                  color: Colors.white,
-                  size: 25,
+                Icons.filter_list,
+                color: Colors.white,
+                size: 25,
               ),
-              onPressed: () {
-
-              },
+              onPressed: () {},
             ),
           ],
         ),
@@ -138,59 +135,58 @@ class _HomePageState extends State<HomePage> {
 
   //private function for todolist
   _todoScreen() {
-
     return Stack(
       children: [
         ListView(
           children: [
-            SizedBox(
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20.0),
-                    bottomRight: Radius.circular(20.0),
-                  ),
-                  color: Colors.black, // Left half is black
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    // date-picker widget for scrollable date timeline
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 5.0),
-                      child: DatePicker(
-                        DateTime.now(),
-                        initialSelectedDate: selectedDate,
-                        selectionColor: Colors.white,
-                        selectedTextColor: Colors.black,
-                        dateTextStyle: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                        monthTextStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                        dayTextStyle: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                        onDateChange: (date) {
-                          // New date selected
-                          setState(() {
-                            selectedDate = date;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Three Circles for Priority
+                SizedBox(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(20.0),
+                        bottomRight: Radius.circular(20.0),
+                      ),
+                      color: Colors.black, // Left half is black
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        // date-picker widget for scrollable date timeline
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 10.0, horizontal: 5.0),
+                          child: DatePicker(
+                            DateTime.now(),
+                            initialSelectedDate: selectedDate,
+                            selectionColor: Colors.white,
+                            selectedTextColor: Colors.black,
+                            dateTextStyle: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                            ),
+                            monthTextStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                            dayTextStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                            onDateChange: (date) {
+                              // New date selected
+                              setState(() {
+                                selectedDate = date;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Three Circles for Priority and two buttons
                 Row(
                   children: [
                     Padding(
@@ -198,13 +194,14 @@ class _HomePageState extends State<HomePage> {
                       child: Wrap(
                         children: List<Widget>.generate(
                           3,
-                              (int index) {
+                          (int index) {
                             return GestureDetector(
-                              onTap:  (){
+                              onTap: () {
                                 setState(() {
-                                  if(selectedPriority != null && selectedPriority==index) {
+                                  if (selectedPriority != null &&
+                                      selectedPriority == index) {
                                     selectedPriority = null;
-                                  } else{
+                                  } else {
                                     selectedPriority = index;
                                   }
                                 });
@@ -213,12 +210,18 @@ class _HomePageState extends State<HomePage> {
                                 padding: const EdgeInsets.only(right: 10.0),
                                 child: CircleAvatar(
                                   radius: 10, // Corrected typo here
-                                  backgroundColor: index == 0 ? Colors.red : index == 1 ? Colors.orange : Colors.green,
-                                  child: selectedPriority==index ? const Icon(
-                                    Icons.done,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ): null,
+                                  backgroundColor: index == 0
+                                      ? Colors.red
+                                      : index == 1
+                                          ? Colors.orange
+                                          : Colors.green,
+                                  child: selectedPriority == index
+                                      ? const Icon(
+                                          Icons.done,
+                                          color: Colors.white,
+                                          size: 20,
+                                        )
+                                      : null,
                                 ),
                               ),
                             );
@@ -252,18 +255,14 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 Text(
                                   "Completed",
-                                  style: TextStyle(
-                                      color: Colors.black
-                                  ),
+                                  style: TextStyle(color: Colors.black),
                                 ),
                               ],
                             ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              elevation: 0.0
-                            ),
+                                backgroundColor: Colors.white, elevation: 0.0),
                             onPressed: () {
                               _showUploadDialog(context);
                             },
@@ -280,9 +279,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 Text(
                                   "Import/Export",
-                                  style: TextStyle(
-                                      color: Colors.black
-                                  ),
+                                  style: TextStyle(color: Colors.black),
                                 ),
                               ],
                             ),
@@ -292,38 +289,55 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Obx(() {
-
-                  var incompleteTasks = _taskController.taskList.where((task) => task.isCompleted == 0).toList();
+                  var incompleteTasks = _taskController.taskList
+                      .where((task) => task.isCompleted == 0)
+                      .toList();
                   var searchQuery = _searchController.text.toLowerCase();
 
                   if (selectedPriority != null) {
                     if (selectedPriority == 0) {
-                      incompleteTasks = incompleteTasks.where((task) => task.priority == "High").toList();
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.priority == "High")
+                          .toList();
                     } else if (selectedPriority == 1) {
-                      incompleteTasks = incompleteTasks.where((task) => task.priority == "Medium").toList();
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.priority == "Medium")
+                          .toList();
                     } else if (selectedPriority == 2) {
-                      incompleteTasks = incompleteTasks.where((task) => task.priority == "Low").toList();
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.priority == "Low")
+                          .toList();
                     }
                   }
 
                   // to catch the search phrase
-                  if(searchQuery.isNotEmpty){
-                    incompleteTasks = incompleteTasks.where((task) => task.taskTitle!.toLowerCase().contains(searchQuery)).toList();
+                  if (searchQuery.isNotEmpty) {
+                    incompleteTasks = incompleteTasks
+                        .where((task) =>
+                            task.taskTitle!.toLowerCase().contains(searchQuery))
+                        .toList();
                   }
 
                   return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: incompleteTasks.length,
-                    itemBuilder: (context, index) {
-                      final task = incompleteTasks[index];
-                      print(task.toJson());
-                      if(task.taskDate == "${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}") {
-                        return GestureDetector(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: incompleteTasks.length,
+                      itemBuilder: (context, index) {
+                        final task = incompleteTasks[index];
+                        print(task.toJson());
+                        if (task.taskDate ==
+                            "${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}") {
+                          return GestureDetector(
                             onTap: () {
-                              Get.to(() => const TaskPageView(),
-                              arguments: task,
+                              Get.to(
+                                () => const TaskPageView(),
+                                arguments: task,
                               );
                             },
                             child: Slidable(
@@ -349,7 +363,8 @@ class _HomePageState extends State<HomePage> {
                                     activeColor: Colors.black,
                                     shape: const CircleBorder(),
                                     onChanged: (bool? ticked) {
-                                      _taskController.markTaskCompleted(task.taskId);
+                                      _taskController
+                                          .markTaskCompleted(task.taskId);
                                       _taskController.getTasks();
                                     },
                                   ),
@@ -370,21 +385,27 @@ class _HomePageState extends State<HomePage> {
                                       width: 24,
                                       decoration: BoxDecoration(
                                         color: priorityColors[task.priority],
-                                        borderRadius: BorderRadius.circular(10.0),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
                                       ),
                                     ),
                                     const SizedBox(width: 15),
                                     Row(
-                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          task.taskDescription!.isNotEmpty ? Icons.menu : null,
+                                          task.taskDescription!.isNotEmpty
+                                              ? Icons.menu
+                                              : null,
                                           color: Colors.black,
                                           size: 12,
                                         ),
                                         const SizedBox(width: 15),
                                         Icon(
-                                          task.attachment != null ? Icons.attachment : null,
+                                          task.attachment != null
+                                              ? Icons.attachment
+                                              : null,
                                           color: Colors.black,
                                           size: 12,
                                         ),
@@ -399,11 +420,10 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           );
-                      } else {
-                        return Container();
-                      }
-                    }
-                  );
+                        } else {
+                          return Container();
+                        }
+                      });
                 }),
               ],
             ),
@@ -426,7 +446,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(width: 16.0), // Add some spacing between buttons
               FloatingActionButton(
-                onPressed: () async{
+                onPressed: () async {
                   await Get.to(() => const AddTaskPage());
                   _taskController.getTasks();
                 },
@@ -460,7 +480,8 @@ class _HomePageState extends State<HomePage> {
               ),
               Container(
                 color: Colors.grey.shade300,
-                padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 60.0, vertical: 20.0),
                 child: Column(
                   children: [
                     const Icon(
@@ -501,8 +522,7 @@ class _HomePageState extends State<HomePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25.0)
-                  ),
+                      borderRadius: BorderRadius.circular(25.0)),
                 ),
                 child: const Text('Export'),
               ),
@@ -513,4 +533,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-

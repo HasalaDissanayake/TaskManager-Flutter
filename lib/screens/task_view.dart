@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
 
+import '../models/task.dart';
+
 class TaskPageView extends StatefulWidget {
   const TaskPageView({super.key});
 
@@ -11,18 +13,25 @@ class TaskPageView extends StatefulWidget {
 }
 
 class _TaskPageViewState extends State<TaskPageView> {
-
+  // get db values
+  final task = Get.arguments;
   final TaskController _taskController = Get.put(TaskController());
 
-  final  _titleController = TextEditingController();
-  final  _descriptionController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   String? selectedCategory;
+  String? updatedCategory;
   String selectedPriority = 'Low';
+  String? updatedPriority;
+
   String? selectedReminder;
+  String? updatedReminder;
 
   DateTime selectedDate = DateTime.now();
+  DateTime? updatedDate;
   TimeOfDay selectedTime = TimeOfDay.now();
+  TimeOfDay? updatedTime;
   bool switchDateValue = true;
   bool switchTimeValue = true;
   bool isCompleted = false;
@@ -30,16 +39,15 @@ class _TaskPageViewState extends State<TaskPageView> {
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: selectedDate,
+      initialDate: updatedDate ?? selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2101),
     );
     if (pickedDate != null) {
       setState(() {
-        selectedDate = pickedDate!;
+        updatedDate = pickedDate!;
       });
-    }
-    else{
+    } else {
       switchDateValue = false;
     }
   }
@@ -52,10 +60,9 @@ class _TaskPageViewState extends State<TaskPageView> {
 
     if (pickedTime != null) {
       setState(() {
-        selectedTime = pickedTime;
+        updatedTime = pickedTime;
       });
-    }
-    else {
+    } else {
       switchTimeValue = false;
     }
   }
@@ -70,9 +77,6 @@ class _TaskPageViewState extends State<TaskPageView> {
 
   @override
   Widget build(BuildContext context) {
-
-    // assigned the db values
-    final task = Get.arguments;
     _titleController.text = task.taskTitle;
     _descriptionController.text = task.taskDescription ?? "";
     selectedCategory = task.category;
@@ -162,7 +166,9 @@ class _TaskPageViewState extends State<TaskPageView> {
                 controller: _descriptionController,
                 enabled: isCompleted ? false : true,
                 decoration: InputDecoration(
-                  hintText: !isCompleted ? 'Enter task description' : 'No description',
+                  hintText: !isCompleted
+                      ? 'Enter task description'
+                      : 'No description',
                   hintStyle: const TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.w500,
@@ -200,7 +206,7 @@ class _TaskPageViewState extends State<TaskPageView> {
                   ),
                   const Spacer(),
                   DropdownButton<String>(
-                    value: selectedCategory,
+                    value: updatedCategory ?? selectedCategory,
                     hint: const Text("None"),
                     items: <String>[
                       'Health',
@@ -223,11 +229,14 @@ class _TaskPageViewState extends State<TaskPageView> {
                         ),
                       );
                     }).toList(),
-                    onChanged: !isCompleted ? (String? value) {
-                      setState(() {
-                        selectedCategory = value; // Update the selected value
-                      });
-                    } : null,
+                    onChanged: !isCompleted
+                        ? (String? value) {
+                            setState(() {
+                              updatedCategory =
+                                  value; // Update the selected value
+                            });
+                          }
+                        : null,
                   ),
                 ],
               ),
@@ -254,11 +263,14 @@ class _TaskPageViewState extends State<TaskPageView> {
                 ],
               ),
             ),
-            if (selectedDate != null && switchDateValue == true)
+            if ((selectedDate != null || updatedDate != null) &&
+                switchDateValue == true)
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  'Date: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                  updatedDate != null
+                      ? 'Date: ${updatedDate?.day}/${updatedDate?.month}/${updatedDate?.year}'
+                      : 'Date: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
                   style: const TextStyle(fontSize: 18.0),
                 ),
               ),
@@ -285,11 +297,13 @@ class _TaskPageViewState extends State<TaskPageView> {
                 ],
               ),
             ),
-            if(selectedTime != null && switchTimeValue == true)
+            if (switchTimeValue == true)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 5.0, 16.0, 16.0),
                 child: Text(
-                  'Time: ${selectedTime.hour}:${selectedTime.minute}',
+                  updatedTime != null
+                      ? 'Time: ${updatedTime?.hour}:${updatedTime?.minute}'
+                      : 'Time: ${selectedTime.hour}:${selectedTime.minute}',
                   style: const TextStyle(fontSize: 18.0),
                 ),
               ),
@@ -326,23 +340,26 @@ class _TaskPageViewState extends State<TaskPageView> {
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       //button to upload a file
-                      child: GestureDetector(
-                        onTap: () {
-                          _showUploadDialog(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0,
-                            vertical: 3.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          //upload Icon here
-                          child: const Icon(
-                            Icons.upload_file,
-                            color: Colors.black,
+                      child: IgnorePointer(
+                        ignoring: isCompleted ? true : false,
+                        child: GestureDetector(
+                          onTap: () {
+                            _showUploadDialog(context);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 3.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            //upload Icon here
+                            child: const Icon(
+                              Icons.upload_file,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ),
@@ -371,8 +388,9 @@ class _TaskPageViewState extends State<TaskPageView> {
                   ),
                   const Spacer(),
                   DropdownButton<String>(
-                    value: selectedPriority, // Add this line to set the selected value
-                    items: <String>['High', 'Medium', 'Low'].map((String value) {
+                    value: updatedPriority ?? selectedPriority,
+                    items:
+                        <String>['High', 'Medium', 'Low'].map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Row(
@@ -408,11 +426,14 @@ class _TaskPageViewState extends State<TaskPageView> {
                         ),
                       );
                     }).toList(),
-                    onChanged: !isCompleted ? (String? value) {
-                      setState(() {
-                        selectedPriority = value!; // Update the selected value
-                      });
-                    } : null,
+                    onChanged: !isCompleted
+                        ? (String? value) {
+                            setState(() {
+                              updatedPriority =
+                                  value!; // Update the selected value
+                            });
+                          }
+                        : null,
                   ),
                 ],
               ),
@@ -437,9 +458,13 @@ class _TaskPageViewState extends State<TaskPageView> {
                   ),
                   const Spacer(),
                   DropdownButton<String>(
-                    value: selectedReminder, // Add this line to set the selected value
+                    value: updatedReminder ?? selectedReminder,
                     hint: const Text("None"),
-                    items: <String>['5 mins early', '10 mins early', '15 mins early'].map((String value) {
+                    items: <String>[
+                      '5 mins early',
+                      '10 mins early',
+                      '15 mins early'
+                    ].map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(
@@ -452,11 +477,14 @@ class _TaskPageViewState extends State<TaskPageView> {
                         ),
                       );
                     }).toList(),
-                    onChanged: !isCompleted ? (String? value) {
-                      setState(() {
-                        selectedReminder = value; // Update the selected value
-                      });
-                    } : null,
+                    onChanged: !isCompleted
+                        ? (String? value) {
+                            setState(() {
+                              updatedReminder =
+                                  value; // Update the selected value
+                            });
+                          }
+                        : null,
                   ),
                 ],
               ),
@@ -468,26 +496,27 @@ class _TaskPageViewState extends State<TaskPageView> {
                 onTap: () {
                   _validateForm();
                 },
-                child: !isCompleted ? Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40.0,
-                    vertical: 8.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: const Center(
-                      child: Text(
-                        'Update Task',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                child: !isCompleted
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 40.0,
+                          vertical: 8.0,
                         ),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: const Center(
+                            child: Text(
+                          'Update Task',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        )),
                       )
-                  ),
-                ) : Container(),
+                    : Container(),
               ),
             ),
           ],
@@ -495,7 +524,6 @@ class _TaskPageViewState extends State<TaskPageView> {
       ),
     );
   }
-
 
   void _showUploadDialog(BuildContext context) {
     showDialog(
@@ -515,7 +543,8 @@ class _TaskPageViewState extends State<TaskPageView> {
               ),
               Container(
                 color: Colors.grey.shade300,
-                padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 60.0, vertical: 20.0),
                 child: Column(
                   children: [
                     const Icon(
@@ -585,23 +614,37 @@ class _TaskPageViewState extends State<TaskPageView> {
   // }
 
   _validateForm() {
-    if(_titleController.text.isNotEmpty){
+    if (_titleController.text.isNotEmpty) {
       _updateDatabase();
+      _taskController.getTasks();
       Get.back();
     } else if (_titleController.text.isEmpty) {
       Get.snackbar("Required", "All fields are required !",
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.white,
-          icon: const Icon(
-              Icons.warning_amber_rounded
-          )
-      );
+          icon: const Icon(Icons.warning_amber_rounded));
     }
   }
 
   // update database
-  _updateDatabase() {
-
+  _updateDatabase() async {
+    await _taskController.updateTask(
+        task: Task(
+      taskId: task.taskId,
+      taskTitle: _titleController.text,
+      taskDescription: _descriptionController.text,
+      category: updatedCategory ?? selectedCategory,
+      taskDate: updatedDate != null
+          ? "${updatedDate?.day}/${updatedDate?.month}/${updatedDate?.year}"
+          : "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+      taskTime: updatedTime != null
+          ? "${updatedTime?.hour}:${updatedTime?.minute}"
+          : "${selectedTime.hour}:${selectedTime.minute}",
+      attachment: null,
+      priority: updatedPriority ?? selectedPriority,
+      remind: updatedReminder ?? selectedReminder,
+      isCompleted: 0,
+    ));
   }
 
   _dueDateSwitch() {
@@ -609,15 +652,18 @@ class _TaskPageViewState extends State<TaskPageView> {
       value: switchDateValue,
       activeColor: Colors.black,
       onChanged: (bool value) {
-        setState(() {
-          switchDateValue = value;
-          if (value) {
-            _selectDate(context);
-          }
-          else{
-            selectedDate = DateTime.now();
-          }
-        });
+        if (!isCompleted) {
+          setState(() {
+            switchDateValue = value;
+            if (value) {
+              _selectDate(context);
+            } else {
+              updatedDate = DateTime.now();
+            }
+          });
+        } else {
+          null;
+        }
       },
     );
   }
@@ -627,19 +673,19 @@ class _TaskPageViewState extends State<TaskPageView> {
       value: switchTimeValue,
       activeColor: Colors.black,
       onChanged: (bool value) {
-        setState(() {
-          switchTimeValue = value;
-          if (value) {
-            _selectTime(context);
-          }
-          else{
-            selectedTime = TimeOfDay.now();
-          }
-        });
+        if (!isCompleted) {
+          setState(() {
+            switchTimeValue = value;
+            if (value) {
+              _selectTime(context);
+            } else {
+              updatedTime = TimeOfDay.now();
+            }
+          });
+        } else {
+          null;
+        }
       },
     );
   }
-
 }
-
-
