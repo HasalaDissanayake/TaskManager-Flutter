@@ -76,7 +76,8 @@ class _TaskPageViewState extends State<TaskPageView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     _titleController.text = task.taskTitle;
     _descriptionController.text = task.taskDescription ?? "";
     selectedCategory = task.category;
@@ -91,7 +92,10 @@ class _TaskPageViewState extends State<TaskPageView> {
     selectedTime = stringToTimeOfDay(task.taskTime);
     selectedPriority = task.priority;
     selectedReminder = task.remind;
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0.0,
