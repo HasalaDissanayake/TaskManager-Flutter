@@ -235,11 +235,12 @@ class _TaskPageViewState extends State<TaskPageView> {
                     items: <String>[
                       'Health',
                       'Work',
+                      'Finance',
                       'Education',
+                      'Travel',
+                      'Shopping',
                       'Entertainment',
-                      'Exercise',
-                      'Food',
-                      'Other'
+                      'Other',
                     ].map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
