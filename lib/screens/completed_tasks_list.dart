@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:taskmanager/screens/task_view.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
+import 'package:taskmanager/screens/task_view.dart';
 
 class CompletedTaskPage extends StatefulWidget {
   const CompletedTaskPage({super.key});
@@ -11,7 +11,6 @@ class CompletedTaskPage extends StatefulWidget {
 }
 
 class _CompletedTaskPageState extends State<CompletedTaskPage> {
-
   final _taskController = Get.put(TaskController());
 
   //icons for the categories
@@ -71,98 +70,114 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
   }
 
   _tasksList() {
-    return Stack(
-      children: [
-        ListView(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Text(
-                    'Completed List',
-                    style: TextStyle(
-                      fontSize: 42.0,
-                      fontWeight: FontWeight.w700,
-                    ),
+    return Stack(children: [
+      ListView(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Text(
+                  'Completed List',
+                  style: TextStyle(
+                    fontSize: 42.0,
+                    fontWeight: FontWeight.w700,
                   ),
-                  SizedBox(width: 10.0),
-                  Icon(
-                    Icons.task,
-                    size: 50,
-                  ),
-                ],
-              ),
-            ),
-                Obx(() {
-
-                  final completedTasks = _taskController.taskList.where((task) => task.isCompleted == 1).toList();
-
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: completedTasks.length,
-                    itemBuilder: (context, index) {
-                      final task = completedTasks[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Get.to(() => const TaskPageView(),
-                            arguments: task,
-                          );
-                        },
-                        child: ListTile(
-                          title: Text(
-                            "${task.taskTitle}",
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 20.0,
-                              decoration: TextDecoration.none,
-                            ),
-                          ),
-                          subtitle: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                height: 5,
-                                width: 24,
-                                decoration: BoxDecoration(
-                                  color: priorityColors[task.priority],
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                              ),
-                              const SizedBox(width: 15),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    task.taskDescription!.isNotEmpty ? Icons.menu : null,
-                                    color: Colors.black,
-                                    size: 12,
-                                  ),
-                                  const SizedBox(width: 15),
-                                  Icon(
-                                    task.attachment != null ? Icons.attachment : null,
-                                    color: Colors.black,
-                                    size: 12,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          trailing: Icon(
-                            categoryIcons[task.category],
-                            color: Colors.black,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 30.0),
-                        ),
-                      );
-                    },
-                  );
-                }),
+                ),
+                SizedBox(width: 10.0),
+                Icon(
+                  Icons.task,
+                  size: 50,
+                ),
               ],
-        ),
-      ]
-    );
-  }
+            ),
+          ),
+          Obx(() {
+            final completedTasks = _taskController.taskList
+                .where((task) => task.isCompleted == 1)
+                .toList();
 
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: completedTasks.length,
+              itemBuilder: (context, index) {
+                final task = completedTasks[index];
+                return GestureDetector(
+                  onTap: () {
+                    Get.to(
+                      () => const TaskPageView(),
+                      arguments: task,
+                    );
+                  },
+                  child: ListTile(
+                    title: Text(
+                      "${task.taskTitle}",
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 20.0,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    subtitle: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 5,
+                          width: 24,
+                          decoration: BoxDecoration(
+                            color: priorityColors[task.priority],
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            if (task.taskDescription!.isNotEmpty &&
+                                task.attachment == null)
+                              const Icon(
+                                Icons.menu,
+                                color: Colors.black,
+                                size: 12,
+                              ),
+                            if (task.attachment != null &&
+                                task.taskDescription!.isEmpty)
+                              const Icon(
+                                Icons.attachment,
+                                color: Colors.black,
+                                size: 12,
+                              ),
+                            if (task.attachment != null &&
+                                task.taskDescription!.isNotEmpty)
+                              const Icon(
+                                Icons.menu,
+                                color: Colors.black,
+                                size: 12,
+                              ),
+                            const SizedBox(width: 15),
+                            const Icon(
+                              Icons.attachment,
+                              color: Colors.black,
+                              size: 12,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    trailing: Icon(
+                      categoryIcons[task.category],
+                      color: Colors.black,
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 30.0),
+                  ),
+                );
+              },
+            );
+          }),
+        ],
+      ),
+    ]);
+  }
 }

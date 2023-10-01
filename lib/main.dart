@@ -1,4 +1,5 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
@@ -12,6 +13,19 @@ Future<void> main() async {
   //init db
   await DBHelper.initDb();
   await GetStorage.init();
+  //init notification service
+  AwesomeNotifications().initialize('resource://drawable/app_icon', [
+    NotificationChannel(
+      channelGroupKey: 'ToDo',
+      channelKey: 'ToDo',
+      channelName: 'ToDo',
+      channelDescription: 'Task due date reminder notification',
+      channelShowBadge: true,
+      importance: NotificationImportance.Max,
+      enableVibration: true,
+    ),
+  ]);
+
   runApp(const MyApp());
 }
 
@@ -37,8 +51,8 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSplashScreen(
-        splash: Image.asset('assets/images/todo_white.png'),
-        nextScreen: const HomePage(),
+      splash: Image.asset('assets/images/todo_white.png'),
+      nextScreen: const HomePage(),
       backgroundColor: Colors.black,
       splashIconSize: 250,
       duration: 3000,
@@ -46,4 +60,3 @@ class SplashScreen extends StatelessWidget {
     );
   }
 }
-

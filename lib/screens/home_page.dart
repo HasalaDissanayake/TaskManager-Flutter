@@ -1,12 +1,21 @@
+import 'dart:io';
+
+import 'package:archive/archive.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
+import 'package:taskmanager/models/task.dart';
 import 'package:taskmanager/screens/add_new_task.dart';
 import 'package:taskmanager/screens/faq.dart';
 import 'package:taskmanager/screens/task_view.dart';
+import 'package:taskmanager/services/notification_service.dart';
 
 import 'completed_tasks_list.dart';
 
@@ -43,6 +52,7 @@ class _HomePageState extends State<HomePage> {
 
   DateTime? selectedDate = DateTime.now();
   int? selectedPriority;
+  String? selectedCategory;
 
   @override
   void initState() {
@@ -50,13 +60,108 @@ class _HomePageState extends State<HomePage> {
     _taskController.getTasks();
   }
 
+  // export database
+  Future<void> exportDatabase(BuildContext context) async {
+    // Get the path to the current database file
+    final databasePath = await getDatabasesPath();
+    final path = join(databasePath, 'task_database.db');
+
+    // Copy the database file to a location accessible
+    final externalStorageDir = await getExternalStorageDirectory();
+    final backupPath = join(externalStorageDir!.path, 'backup.db');
+    await File(path).copy(backupPath);
+
+    print('Database exported to: $backupPath');
+  }
+
+  // export attachments
+  Future<void> copyImagesToExportDirectory(RxList<Task> taskList) async {
+    // Get directory where images are stored
+    const originalDirectory = '/data/data/com.example.taskmanager/app_flutter/';
+    final externalStorageDir = await getExternalStorageDirectory();
+
+    for (final task in taskList!) {
+      if (task.attachment != null) {
+        final taskAttachmentName = task.attachment?.split('/').last;
+        final sourceFile = File('$originalDirectory$taskAttachmentName');
+        final destinationFile =
+            File('${externalStorageDir!.path}/$taskAttachmentName');
+
+        if (await sourceFile.exists()) {
+          await sourceFile.copy(destinationFile.path);
+        }
+      }
+    }
+    print('Attachments exported to: ${externalStorageDir!.path}');
+  }
+
+  // to create a zip file with db and attachments
+  Future<void> createZipArchive(RxList<Task> taskList) async {
+    final externalStorageDir = await getExternalStorageDirectory();
+    final archive = Archive();
+
+    // Add the SQLite database to the archive
+    final dbFile = File('${externalStorageDir!.path}/backup.db');
+    final dbData = await dbFile.readAsBytes();
+    archive.addFile(ArchiveFile('backup.db', dbData.length, dbData));
+
+    for (final task in taskList) {
+      if (task.attachment != null) {
+        final taskAttachmentName = task.attachment?.split('/').last;
+        final attachment =
+            File('${externalStorageDir!.path}/$taskAttachmentName');
+        final attachmentData = await attachment.readAsBytes();
+        archive.addFile(ArchiveFile(
+            taskAttachmentName!, attachmentData.length, attachmentData));
+      }
+    }
+
+    // Create the ZIP file
+    final zipFile = File('${externalStorageDir!.path}/exported_data.zip');
+    await zipFile.writeAsBytes(ZipEncoder().encode(archive) ?? <int>[]);
+
+    print('ZIP archive created at: ${zipFile.path}');
+  }
+
+  // when importing zip, unzip and copy content to app storage
+  Future<void> importDatabaseAndAttachments(FilePickerResult result) async {
+    if (result != null && result.files.isNotEmpty) {
+      final dbFilePath = await getDatabasesPath();
+      final zipFile = File(result.files.first.path!);
+
+      final archive = ZipDecoder().decodeBytes(zipFile.readAsBytesSync());
+
+      // Iterate through the entries
+      for (final file in archive) {
+        if (file.isFile) {
+          final data = file.content;
+          // find the DB
+          if (file.name == 'backup.db') {
+            final dbPath = '$dbFilePath/task_database.db';
+            final dbFile = File(dbPath);
+            await dbFile.writeAsBytes(data, flush: true);
+            print('Database imported to: $dbPath');
+          } else {
+            const originalDirectory =
+                '/data/data/com.example.taskmanager/app_flutter/';
+            final attachmentPath = '$originalDirectory${file.name}';
+            final attachmentFile = File(attachmentPath);
+            await attachmentFile.writeAsBytes(data, flush: true);
+            print('Attachment imported to: $attachmentPath');
+          }
+        }
+      }
+      print('ZIP archive imported Success');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: _appBar(), body: _todoScreen());
+    return Scaffold(appBar: _appBar(context), body: _todoScreen(context));
   }
 
   // private function for appbar
-  _appBar() {
+  _appBar(BuildContext context) {
     return AppBar(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,14 +221,56 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            IconButton(
-              padding: const EdgeInsets.only(right: 20.0, left: 10.0),
-              icon: const Icon(
-                Icons.filter_list,
-                color: Colors.white,
-                size: 25,
+            Container(
+              height: 35,
+              width: 40,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(15.0),
               ),
-              onPressed: () {},
+              child: PopupMenuButton<String>(
+                icon: const Icon(
+                  Icons.filter_list,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onSelected: (String value) {
+                  setState(() {
+                    if (value == selectedCategory) {
+                      selectedCategory = null;
+                    } else {
+                      selectedCategory = value;
+                    }
+                  });
+                },
+                itemBuilder: (context) {
+                  return categoryIcons.keys.map((String category) {
+                    return PopupMenuItem<String>(
+                      value: category,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: selectedCategory == category
+                              ? Colors.grey[400]
+                              : Colors.white,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                categoryIcons[category],
+                                color: Colors.black,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(category),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList();
+                },
+              ),
             ),
           ],
         ),
@@ -134,7 +281,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   //private function for todolist
-  _todoScreen() {
+  _todoScreen(BuildContext context) {
     return Stack(
       children: [
         ListView(
@@ -298,6 +445,8 @@ class _HomePageState extends State<HomePage> {
                   var incompleteTasks = _taskController.taskList
                       .where((task) => task.isCompleted == 0)
                       .toList();
+                  // for notification schedule
+                  _scheduleNotificationsForDueTasks(incompleteTasks);
                   var searchQuery = _searchController.text.toLowerCase();
 
                   if (selectedPriority != null) {
@@ -324,6 +473,50 @@ class _HomePageState extends State<HomePage> {
                         .toList();
                   }
 
+                  // to filter based on category
+                  if (selectedCategory != null) {
+                    if (selectedCategory == 'Health') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Health")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Work') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Work")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Finance') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Finance")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Education') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Education")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Travel') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Travel")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Shopping') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Shopping")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Entertainment') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Entertainment")
+                          .toList();
+                    }
+                    if (selectedCategory == 'Other') {
+                      incompleteTasks = incompleteTasks
+                          .where((task) => task.category == "Other")
+                          .toList();
+                    }
+                  }
+
                   return ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -335,6 +528,7 @@ class _HomePageState extends State<HomePage> {
                             "${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}") {
                           return GestureDetector(
                             onTap: () {
+                              print(task.toJson());
                               Get.to(
                                 () => const TaskPageView(),
                                 arguments: task,
@@ -394,18 +588,30 @@ class _HomePageState extends State<HomePage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        Icon(
-                                          task.taskDescription!.isNotEmpty
-                                              ? Icons.menu
-                                              : null,
-                                          color: Colors.black,
-                                          size: 12,
-                                        ),
+                                        if (task.taskDescription!.isNotEmpty &&
+                                            task.attachment == null)
+                                          const Icon(
+                                            Icons.menu,
+                                            color: Colors.black,
+                                            size: 12,
+                                          ),
+                                        if (task.attachment != null &&
+                                            task.taskDescription!.isEmpty)
+                                          const Icon(
+                                            Icons.attachment,
+                                            color: Colors.black,
+                                            size: 12,
+                                          ),
+                                        if (task.attachment != null &&
+                                            task.taskDescription!.isNotEmpty)
+                                          const Icon(
+                                            Icons.menu,
+                                            color: Colors.black,
+                                            size: 12,
+                                          ),
                                         const SizedBox(width: 15),
-                                        Icon(
-                                          task.attachment != null
-                                              ? Icons.attachment
-                                              : null,
+                                        const Icon(
+                                          Icons.attachment,
                                           color: Colors.black,
                                           size: 12,
                                         ),
@@ -492,7 +698,13 @@ class _HomePageState extends State<HomePage> {
                     ElevatedButton(
                       onPressed: () {
                         // Handle import logic
-                        Get.back(); // Close the dialog
+                        _attachTaskFile(context);
+                        _taskController.getTasks();
+                        Get.back();
+                        Get.snackbar("Success", "Task List Imported !",
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.white,
+                            icon: const Icon(Icons.warning_amber_rounded));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
@@ -517,7 +729,12 @@ class _HomePageState extends State<HomePage> {
               ElevatedButton(
                 onPressed: () {
                   // Handle export logic
-                  Get.back(); // Close the dialog
+                  _exportTaskFile(context);
+                  Get.back();
+                  Get.snackbar("Success", "Task List Exported !",
+                      snackPosition: SnackPosition.TOP,
+                      backgroundColor: Colors.white,
+                      icon: const Icon(Icons.warning_amber_rounded));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -531,5 +748,49 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  // to import db file
+  _attachTaskFile(BuildContext context) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
+    );
+
+    await importDatabaseAndAttachments(result!);
+    result = null;
+  }
+
+  // to export db file
+  _exportTaskFile(BuildContext context) async {
+    await exportDatabase(context);
+    await copyImagesToExportDirectory(_taskController.taskList);
+    await createZipArchive(_taskController.taskList);
+  }
+
+  _scheduleNotificationsForDueTasks(List<Task> taskList) {
+    for (Task task in taskList) {
+      List<String>? dateParts = task.taskDate?.split('/');
+      List<String>? timeParts = task.taskTime?.split(':');
+      int day = int.parse(dateParts![0]);
+      int month = int.parse(dateParts![1]);
+      int year = int.parse(dateParts![2]);
+      int hour = int.parse(timeParts![0]);
+      int mins = int.parse(timeParts[1]);
+      DateTime taskDate = DateTime(year, month, day, hour, mins);
+      int remindDays = int.parse(task.remind!.split(' ')[0]);
+
+      // Calculate the notification date based on the remindDays
+      DateTime notificationDateTime =
+          taskDate.subtract(Duration(days: remindDays));
+      print(taskDate);
+      print(notificationDateTime);
+      // Schedule the notification for this task
+      if (DateTime.now().isBefore(notificationDateTime)) {
+        NotifyHelper().scheduleNotification(
+            task.taskId, task.taskTitle, task.taskDate, notificationDateTime);
+      }
+    }
   }
 }

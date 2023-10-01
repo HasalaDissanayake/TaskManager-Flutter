@@ -22,7 +22,7 @@ class DBHelper {
             "task_id INTEGER PRIMARY KEY AUTOINCREMENT, "
             "task_title STRING, task_description TEXT, category STRING, "
             "task_date STRING, task_time STRING, priority STRING, "
-            "remind INTEGER, is_completed INTEGER, attachment BLOB)",
+            "remind INTEGER, is_completed INTEGER, attachment STRING)",
           );
         },
       );

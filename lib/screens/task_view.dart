@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
 
 import '../models/task.dart';
@@ -28,6 +34,10 @@ class _TaskPageViewState extends State<TaskPageView> {
   String? selectedReminder;
   String? updatedReminder;
 
+  String? selectedFileName = '';
+  String? selectedFilePath = '';
+  String? relativePath;
+
   DateTime selectedDate = DateTime.now();
   DateTime? updatedDate;
   TimeOfDay selectedTime = TimeOfDay.now();
@@ -50,6 +60,12 @@ class _TaskPageViewState extends State<TaskPageView> {
     } else {
       switchDateValue = false;
     }
+  }
+
+  // for file storing relative path is considered
+  Future<String> getAppStorageDirectory() async {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    return appDocDir.path;
   }
 
   Future<void> _selectTime(BuildContext context) async {
@@ -92,6 +108,10 @@ class _TaskPageViewState extends State<TaskPageView> {
     selectedTime = stringToTimeOfDay(task.taskTime);
     selectedPriority = task.priority;
     selectedReminder = task.remind;
+    relativePath = task.attachment;
+
+    selectedFileName = relativePath?.split('/').last;
+    print(selectedFileName);
   }
 
   @override
@@ -330,40 +350,44 @@ class _TaskPageViewState extends State<TaskPageView> {
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      // Implement file upload logic here
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 8.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      //button to upload a file
-                      child: IgnorePointer(
-                        ignoring: isCompleted ? true : false,
-                        child: GestureDetector(
-                          onTap: () {
-                            _showUploadDialog(context);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0,
-                              vertical: 3.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            //upload Icon here
-                            child: const Icon(
-                              Icons.upload_file,
-                              color: Colors.black,
-                            ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 8.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (selectedFileName == null ||
+                              selectedFileName!.isEmpty)
+                          ? Colors.grey[200]
+                          : Colors.black,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    //button to upload a file
+                    child: IgnorePointer(
+                      ignoring: isCompleted ? true : false,
+                      child: GestureDetector(
+                        onTap: () {
+                          _showUploadDialog(context);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 3.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: (selectedFileName == null ||
+                                    selectedFileName!.isEmpty)
+                                ? Colors.grey[200]
+                                : Colors.black,
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          //upload Icon here
+                          child: Icon(
+                            Icons.upload_file,
+                            color: (selectedFileName == null ||
+                                    selectedFileName!.isEmpty)
+                                ? Colors.black
+                                : Colors.white,
                           ),
                         ),
                       ),
@@ -372,6 +396,73 @@ class _TaskPageViewState extends State<TaskPageView> {
                 ],
               ),
             ),
+            if (selectedFileName != null && selectedFileName!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30.0,
+                  vertical: 16.0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        final fileExtension =
+                            selectedFileName!.toLowerCase().split('.').last;
+
+                        fileExtension != "pdf"
+                            ? Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (BuildContext context) {
+                                    return Scaffold(
+                                      appBar: AppBar(),
+                                      body: PhotoView(
+                                        imageProvider: FileImage(File(
+                                            selectedFilePath != ''
+                                                ? selectedFilePath.toString()
+                                                : relativePath!)),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (BuildContext context) {
+                                    return Scaffold(
+                                      appBar: AppBar(),
+                                      body: PDFView(
+                                        filePath: selectedFilePath == ''
+                                            ? relativePath
+                                            : selectedFilePath,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                      },
+                      child: Text(
+                        selectedFileName!,
+                        style: const TextStyle(fontSize: 18.0),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        !isCompleted
+                            ? setState(() {
+                                selectedFileName = '';
+                                relativePath = null;
+                              })
+                            : null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
             //priority dropdown with a dot to indicate the priority
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -465,9 +556,9 @@ class _TaskPageViewState extends State<TaskPageView> {
                     value: updatedReminder ?? selectedReminder,
                     hint: const Text("None"),
                     items: <String>[
-                      '5 mins early',
-                      '10 mins early',
-                      '15 mins early'
+                      '1 Day early',
+                      '2 Days early',
+                      '7 Days early'
                     ].map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -559,6 +650,7 @@ class _TaskPageViewState extends State<TaskPageView> {
                     ElevatedButton(
                       onPressed: () {
                         // Handle import logic
+                        _handleAttach(context);
                         Get.back(); // Close the dialog
                       },
                       style: ElevatedButton.styleFrom(
@@ -567,7 +659,10 @@ class _TaskPageViewState extends State<TaskPageView> {
                           borderRadius: BorderRadius.circular(25.0),
                         ),
                       ),
-                      child: const Text('Browse'),
+                      child: (selectedFileName == null ||
+                              selectedFileName!.isEmpty)
+                          ? const Text('Browse')
+                          : const Text("Change"),
                     ),
                   ],
                 ),
@@ -579,43 +674,34 @@ class _TaskPageViewState extends State<TaskPageView> {
     );
   }
 
-  // void _showUploadDialog(BuildContext context) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Upload File'),
-  //         content: Text('Choose a file to upload.'),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             onPressed: () async {
-  //               FilePickerResult? result = await FilePicker.platform.pickFiles();
-  //               if (result != null) {
-  //                 // Handle the selected file
-  //                 PlatformFile file = result.files.first;
-  //                 // TODO: Implement file upload logic
-  //                 print('File picked: ${file.name}');
-  //                 print('File path: ${file.path}');
-  //               } else {
-  //                 // User canceled the file picker
-  //                 print('File selection canceled.');
-  //               }
-  //
-  //               Navigator.of(context).pop(); // Close the dialog
-  //             },
-  //             child: Text('Choose a file'),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(); // Close the dialog
-  //             },
-  //             child: Text('Cancel'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+  _handleAttach(BuildContext context) async {
+    final appStorageDir = await getAppStorageDirectory();
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+    if (result != null) {
+      // Handle the selected file
+      PlatformFile file = result.files.first;
+      final File temp = File(file.path!);
+
+      relativePath = '$appStorageDir/${file.name}';
+      final fileCopy = File(relativePath!);
+      try {
+        await fileCopy.writeAsBytes(temp.readAsBytesSync());
+      } catch (e) {
+        null;
+      }
+
+      setState(() {
+        selectedFileName = file.name;
+        selectedFilePath = file.path;
+      });
+    } else {
+      return;
+    }
+  }
 
   _validateForm() {
     if (_titleController.text.isNotEmpty) {
@@ -644,7 +730,7 @@ class _TaskPageViewState extends State<TaskPageView> {
       taskTime: updatedTime != null
           ? "${updatedTime?.hour}:${updatedTime?.minute}"
           : "${selectedTime.hour}:${selectedTime.minute}",
-      attachment: null,
+      attachment: relativePath,
       priority: updatedPriority ?? selectedPriority,
       remind: updatedReminder ?? selectedReminder,
       isCompleted: 0,

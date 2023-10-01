@@ -1,5 +1,11 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
 import 'package:taskmanager/models/task.dart';
 
@@ -11,20 +17,29 @@ class AddTaskPage extends StatefulWidget {
 }
 
 class _AddTaskPageState extends State<AddTaskPage> {
-
   final _taskController = Get.put(TaskController());
 
-  final  _titleController = TextEditingController();
-  final  _descriptionController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   String? selectedCategory;
   String selectedPriority = 'Low';
   String? selectedReminder;
 
+  String? selectedFileName = '';
+  String? selectedFilePath = '';
+  String? relativePath;
+
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   bool switchDateValue = false;
   bool switchTimeValue = false;
+
+  // for file storing relative path is considered
+  Future<String> getAppStorageDirectory() async {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    return appDocDir.path;
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -38,8 +53,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       setState(() {
         selectedDate = pickedDate!;
       });
-    }
-    else{
+    } else {
       switchDateValue = false;
     }
   }
@@ -54,8 +68,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       setState(() {
         selectedTime = pickedTime;
       });
-    }
-    else {
+    } else {
       switchTimeValue = false;
     }
   }
@@ -257,7 +270,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ],
               ),
             ),
-            if(selectedTime != null && switchTimeValue == true)
+            if (selectedTime != null && switchTimeValue == true)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 5.0, 16.0, 16.0),
                 child: Text(
@@ -284,38 +297,39 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     ),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      // Implement file upload logic here
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 8.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      //button to upload a file
-                      child: GestureDetector(
-                        onTap: () {
-                          _showUploadDialog(context);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0,
-                            vertical: 3.0,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          //upload Icon here
-                          child: const Icon(
-                            Icons.upload_file,
-                            color: Colors.black,
-                          ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 8.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selectedFileName!.isEmpty
+                          ? Colors.grey[200]
+                          : Colors.black,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    //button to upload a file
+                    child: GestureDetector(
+                      onTap: () {
+                        _showUploadDialog(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 3.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: selectedFileName!.isEmpty
+                              ? Colors.grey[200]
+                              : Colors.black,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        //upload Icon here
+                        child: Icon(
+                          Icons.upload_file,
+                          color: selectedFileName!.isEmpty
+                              ? Colors.black
+                              : Colors.white,
                         ),
                       ),
                     ),
@@ -323,6 +337,66 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ],
               ),
             ),
+            if (selectedFileName!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30.0,
+                  vertical: 16.0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        final fileExtension =
+                            selectedFileName!.toLowerCase().split('.').last;
+
+                        fileExtension != "pdf"
+                            ? Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (BuildContext context) {
+                                    return Scaffold(
+                                      appBar: AppBar(),
+                                      body: PhotoView(
+                                        imageProvider: FileImage(
+                                            File(selectedFilePath.toString())),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (BuildContext context) {
+                                    return Scaffold(
+                                      appBar: AppBar(),
+                                      body: PDFView(
+                                        filePath: selectedFilePath,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                      },
+                      child: Text(
+                        selectedFileName!,
+                        style: const TextStyle(fontSize: 18.0),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          selectedFileName = '';
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             //priority dropdown with a dot to indicate the priority
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -343,8 +417,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   ),
                   const Spacer(),
                   DropdownButton<String>(
-                    value: selectedPriority, // Add this line to set the selected value
-                    items: <String>['High', 'Medium', 'Low'].map((String value) {
+                    value:
+                        selectedPriority, // Add this line to set the selected value
+                    items:
+                        <String>['High', 'Medium', 'Low'].map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Row(
@@ -409,9 +485,14 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   ),
                   const Spacer(),
                   DropdownButton<String>(
-                    value: selectedReminder, // Add this line to set the selected value
+                    value:
+                        selectedReminder, // Add this line to set the selected value
                     hint: const Text("None"),
-                    items: <String>['5 mins early', '10 mins early', '15 mins early'].map((String value) {
+                    items: <String>[
+                      '1 Day early',
+                      '2 Days early',
+                      '5 Days early'
+                    ].map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(
@@ -451,14 +532,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   ),
                   child: const Center(
                       child: Text(
-                        'Create Task',
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      )
-                  ),
+                    'Create Task',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  )),
                 ),
               ),
             ),
@@ -467,7 +547,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       ),
     );
   }
-
 
   void _showUploadDialog(BuildContext context) {
     showDialog(
@@ -487,7 +566,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
               ),
               Container(
                 color: Colors.grey.shade300,
-                padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 60.0, vertical: 20.0),
                 child: Column(
                   children: [
                     const Icon(
@@ -498,6 +578,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     ElevatedButton(
                       onPressed: () {
                         // Handle import logic
+                        _handleAttach(context);
                         Get.back(); // Close the dialog
                       },
                       style: ElevatedButton.styleFrom(
@@ -506,7 +587,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           borderRadius: BorderRadius.circular(25.0),
                         ),
                       ),
-                      child: const Text('Browse'),
+                      child: selectedFileName!.isEmpty
+                          ? const Text('Browse')
+                          : const Text("Change"),
                     ),
                   ],
                 ),
@@ -518,77 +601,62 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
   }
 
-  // don't remove the below code needed for referencing
+  _handleAttach(BuildContext context) async {
+    final appStorageDir = await getAppStorageDirectory();
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: false,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+    if (result != null) {
+      // Handle the selected file
+      PlatformFile file = result.files.first;
+      final File temp = File(file.path!);
 
-  // void _showUploadDialog(BuildContext context) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Upload File'),
-  //         content: Text('Choose a file to upload.'),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             onPressed: () async {
-  //               FilePickerResult? result = await FilePicker.platform.pickFiles();
-  //               if (result != null) {
-  //                 // Handle the selected file
-  //                 PlatformFile file = result.files.first;
-  //                 // TODO: Implement file upload logic
-  //                 print('File picked: ${file.name}');
-  //                 print('File path: ${file.path}');
-  //               } else {
-  //                 // User canceled the file picker
-  //                 print('File selection canceled.');
-  //               }
-  //
-  //               Navigator.of(context).pop(); // Close the dialog
-  //             },
-  //             child: Text('Choose a file'),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(); // Close the dialog
-  //             },
-  //             child: Text('Cancel'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+      relativePath = '$appStorageDir/${file.name}';
+      final fileCopy = File(relativePath!);
+      try {
+        await fileCopy.writeAsBytes(temp.readAsBytesSync());
+      } catch (e) {
+        null;
+      }
+
+      setState(() {
+        selectedFileName = file.name;
+        selectedFilePath = file.path;
+      });
+    } else {
+      return;
+    }
+  }
 
   _validateForm() {
-    if(_titleController.text.isNotEmpty){
+    if (_titleController.text.isNotEmpty) {
       _addDataToDatabase();
       Get.back();
     } else if (_titleController.text.isEmpty) {
       Get.snackbar("Required", "All fields are required !",
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.white,
-        icon: const Icon(
-          Icons.warning_amber_rounded
-        )
-      );
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.white,
+          icon: const Icon(Icons.warning_amber_rounded));
     }
-
   }
 
   // adding data to database
   _addDataToDatabase() async {
     await _taskController.addTask(
-      task: Task(
-          taskTitle: _titleController.text,
-          taskDescription: _descriptionController.text,
-          category: selectedCategory,
-          taskDate: "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-          taskTime: "${selectedTime.hour}:${selectedTime.minute}",
-          attachment: null,
-          priority: selectedPriority,
-          remind: selectedReminder,
-          isCompleted: 0,
-      )
-    );
+        task: Task(
+      taskTitle: _titleController.text,
+      taskDescription: _descriptionController.text,
+      category: selectedCategory,
+      taskDate:
+          "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+      taskTime: "${selectedTime.hour}:${selectedTime.minute}",
+      attachment: relativePath,
+      priority: selectedPriority,
+      remind: selectedReminder,
+      isCompleted: 0,
+    ));
   }
 
   _dueDateSwitch() {
@@ -600,8 +668,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           switchDateValue = value;
           if (value) {
             _selectDate(context);
-          }
-          else{
+          } else {
             selectedDate = DateTime.now();
           }
         });
@@ -618,15 +685,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
           switchTimeValue = value;
           if (value) {
             _selectTime(context);
-          }
-          else{
+          } else {
             selectedTime = TimeOfDay.now();
           }
         });
       },
     );
   }
-
 }
-
-

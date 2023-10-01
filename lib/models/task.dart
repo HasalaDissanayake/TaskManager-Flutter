@@ -1,5 +1,3 @@
-import 'dart:io';
-
 class Task {
   int? taskId;
   String? taskTitle;
@@ -10,7 +8,7 @@ class Task {
   String? priority;
   String? remind;
   int? isCompleted;
-  File? attachment;
+  String? attachment;
 
   Task({
     this.taskId,

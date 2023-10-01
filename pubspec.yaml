@@ -39,8 +39,7 @@ dependencies:
   date_picker_timeline: ^1.2.5
   get_storage: ^2.1.1
   get: ^4.6.6
-  flutter_local_notifications: ^15.1.1
-#  flutter_native_timezone: ^2.0.0
+  awesome_notifications:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -48,6 +47,11 @@ dependencies:
   flutter_svg: ^2.0.7
   accordion: ^2.6.0
   sqflite:
+  flutter_pdfview:
+  photo_view:
+  path_provider:
+  path:
+  archive:
 
 dev_dependencies:
   flutter_test:
