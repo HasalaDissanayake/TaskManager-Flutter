@@ -155,7 +155,7 @@ class _TaskPageViewState extends State<TaskPageView> {
                   const SizedBox(width: 10.0),
                   const Icon(
                     Icons.rate_review,
-                    size: 50,
+                    size: 40,
                   ),
                 ],
               ),

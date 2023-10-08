@@ -60,6 +60,12 @@ class _HomePageState extends State<HomePage> {
     _taskController.getTasks();
   }
 
+  // for file storing relative path is considered
+  Future<String> getAppStorageDirectory() async {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    return appDocDir.path;
+  }
+
   // export database
   Future<void> exportDatabase(BuildContext context) async {
     // Get the path to the current database file
@@ -77,13 +83,13 @@ class _HomePageState extends State<HomePage> {
   // export attachments
   Future<void> copyImagesToExportDirectory(RxList<Task> taskList) async {
     // Get directory where images are stored
-    const originalDirectory = '/data/data/com.example.taskmanager/app_flutter/';
+    final originalDirectory = await getAppStorageDirectory();
     final externalStorageDir = await getExternalStorageDirectory();
 
     for (final task in taskList!) {
       if (task.attachment != null) {
         final taskAttachmentName = task.attachment?.split('/').last;
-        final sourceFile = File('$originalDirectory$taskAttachmentName');
+        final sourceFile = File('$originalDirectory/$taskAttachmentName');
         final destinationFile =
             File('${externalStorageDir!.path}/$taskAttachmentName');
 
@@ -98,6 +104,7 @@ class _HomePageState extends State<HomePage> {
   // to create a zip file with db and attachments
   Future<void> createZipArchive(RxList<Task> taskList) async {
     final externalStorageDir = await getExternalStorageDirectory();
+    const downloadsDir = '/storage/emulated/0/Download';
     final archive = Archive();
 
     // Add the SQLite database to the archive
@@ -117,7 +124,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     // Create the ZIP file
-    final zipFile = File('${externalStorageDir!.path}/exported_data.zip');
+    final zipFile = File('$downloadsDir/exported_data.zip');
     await zipFile.writeAsBytes(ZipEncoder().encode(archive) ?? <int>[]);
 
     print('ZIP archive created at: ${zipFile.path}');
@@ -142,9 +149,8 @@ class _HomePageState extends State<HomePage> {
             await dbFile.writeAsBytes(data, flush: true);
             print('Database imported to: $dbPath');
           } else {
-            const originalDirectory =
-                '/data/data/com.example.taskmanager/app_flutter/';
-            final attachmentPath = '$originalDirectory${file.name}';
+            final originalDirectory = await getAppStorageDirectory();
+            final attachmentPath = '$originalDirectory/${file.name}';
             final attachmentFile = File(attachmentPath);
             await attachmentFile.writeAsBytes(data, flush: true);
             print('Attachment imported to: $attachmentPath');
@@ -250,7 +256,7 @@ class _HomePageState extends State<HomePage> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: selectedCategory == category
-                              ? Colors.grey[400]
+                              ? Colors.grey[300]
                               : Colors.white,
                         ),
                         child: Padding(
@@ -333,9 +339,10 @@ class _HomePageState extends State<HomePage> {
             ),
             // Three Circles for Priority and two buttons
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
+                  padding: const EdgeInsets.only(left: 10.0),
                   child: Wrap(
                     children: List<Widget>.generate(
                       3,
@@ -374,60 +381,52 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    elevation: 0.0,
+                  ),
+                  onPressed: () {
+                    Get.to(() => const CompletedTaskPage());
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          elevation: 0.0,
-                        ),
-                        onPressed: () {
-                          Get.to(() => const CompletedTaskPage());
-                        },
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.task_alt,
-                              color: Colors.black,
-                              size: 24.0,
-                            ),
-                            SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Completed",
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ],
-                        ),
+                      Icon(
+                        Icons.task_alt,
+                        color: Colors.black,
+                        size: 20.0,
                       ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white, elevation: 0.0),
-                        onPressed: () {
-                          _showUploadDialog(context);
-                        },
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.import_export,
-                              color: Colors.black,
-                              size: 24.0,
-                            ),
-                            SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              "Import/Export",
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ],
-                        ),
+                      SizedBox(
+                        width: 4,
+                      ),
+                      Text(
+                        "Completed",
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white, elevation: 0.0),
+                  onPressed: () {
+                    _showUploadDialog(context);
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.import_export,
+                        color: Colors.black,
+                        size: 20.0,
+                      ),
+                      SizedBox(
+                        width: 4,
+                      ),
+                      Text(
+                        "Import/Export",
+                        style: TextStyle(color: Colors.black),
                       ),
                     ],
                   ),
@@ -711,10 +710,14 @@ class _HomePageState extends State<HomePage> {
                         _taskController.getTasks();
                         Get.back();
                         if (imported == 1) {
-                          Get.snackbar("Success", "Task List Imported !",
-                              snackPosition: SnackPosition.TOP,
-                              backgroundColor: Colors.white,
-                              icon: const Icon(Icons.warning_amber_rounded));
+                          Get.snackbar(
+                            "Success",
+                            "Task List Imported !",
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.white,
+                            icon: const Icon(Icons.warning_amber_rounded),
+                            margin: const EdgeInsets.all(25.0),
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -742,10 +745,14 @@ class _HomePageState extends State<HomePage> {
                   // Handle export logic
                   _exportTaskFile(context);
                   Get.back();
-                  Get.snackbar("Success", "Task List Exported !",
-                      snackPosition: SnackPosition.TOP,
-                      backgroundColor: Colors.white,
-                      icon: const Icon(Icons.warning_amber_rounded));
+                  Get.snackbar(
+                    "Success",
+                    "Task List Exported !",
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.white,
+                    icon: const Icon(Icons.warning_amber_rounded),
+                    margin: const EdgeInsets.all(25.0),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -769,7 +776,7 @@ class _HomePageState extends State<HomePage> {
       allowedExtensions: ['zip'],
     );
     // if nothing selected
-    if (result == null) {
+    if (result == null || result.files.first.extension != 'zip') {
       return 0;
     }
 

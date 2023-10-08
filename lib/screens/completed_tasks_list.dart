@@ -76,18 +76,19 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Completed List',
                   style: TextStyle(
-                    fontSize: 42.0,
+                    fontSize: 40.0,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 SizedBox(width: 10.0),
                 Icon(
                   Icons.task,
-                  size: 50,
+                  size: 40,
                 ),
               ],
             ),

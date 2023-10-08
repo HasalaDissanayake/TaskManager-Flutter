@@ -103,9 +103,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Create New Task',
+                    'Add New Task',
                     style: TextStyle(
                       fontSize: 40.0,
                       fontWeight: FontWeight.w700,
@@ -114,7 +115,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   SizedBox(width: 10.0),
                   Icon(
                     Icons.description,
-                    size: 50,
+                    size: 40,
                   ),
                 ],
               ),

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:accordion/accordion.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 
@@ -21,29 +21,29 @@ class _FaqPageState extends State<FaqPage> {
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Text(
                     'Help & Support',
                     style: TextStyle(
-                      fontSize: 42.0,
+                      fontSize: 40.0,
                       fontWeight: FontWeight.w700,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(width: 10.0),
                   Icon(
                     Icons.quiz,
-                    size: 50,
+                    size: 40,
                   ),
                 ],
               ),
             ),
-
             Accordion(
               children: generateAccordionSections(),
             ),
           ],
-        )
-    );
+        ));
   }
 
   _appBar() {
@@ -93,7 +93,6 @@ class _FaqPageState extends State<FaqPage> {
           color: Colors.black26,
           size: 30,
         ),
-
         isOpen: false,
         headerBackgroundColor: Colors.transparent,
         headerPadding: const EdgeInsets.only(left: 10, top: 15),
@@ -101,25 +100,17 @@ class _FaqPageState extends State<FaqPage> {
         contentVerticalPadding: 20,
         contentBorderWidth: 0,
         contentBorderColor: Colors.transparent,
-
         header: Text(
           '${index + 1}. ${questions[index]}',
           style: const TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.bold
-          ),
+              color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
         ),
         content: Text(
           answers[index],
           style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-              fontWeight: FontWeight.normal
-          ),
+              color: Colors.grey, fontSize: 14, fontWeight: FontWeight.normal),
         ),
       );
     });
   }
-
 }
