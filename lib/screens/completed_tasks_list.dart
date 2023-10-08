@@ -150,17 +150,19 @@ class _CompletedTaskPageState extends State<CompletedTaskPage> {
                               ),
                             if (task.attachment != null &&
                                 task.taskDescription!.isNotEmpty)
-                              const Icon(
-                                Icons.menu,
-                                color: Colors.black,
-                                size: 12,
-                              ),
-                            const SizedBox(width: 15),
-                            const Icon(
-                              Icons.attachment,
-                              color: Colors.black,
-                              size: 12,
-                            ),
+                              const Row(children: [
+                                Icon(
+                                  Icons.menu,
+                                  color: Colors.black,
+                                  size: 12,
+                                ),
+                                SizedBox(width: 15),
+                                Icon(
+                                  Icons.attachment,
+                                  color: Colors.black,
+                                  size: 12,
+                                ),
+                              ]),
                           ],
                         ),
                       ],
