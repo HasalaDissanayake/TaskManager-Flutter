@@ -584,6 +584,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                     const SizedBox(width: 15),
+                                    // for the icon shown in task list for descriptions and attachemnts
                                     Row(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
@@ -604,17 +605,19 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                         if (task.attachment != null &&
                                             task.taskDescription!.isNotEmpty)
-                                          const Icon(
-                                            Icons.menu,
-                                            color: Colors.black,
-                                            size: 12,
-                                          ),
-                                        const SizedBox(width: 15),
-                                        const Icon(
-                                          Icons.attachment,
-                                          color: Colors.black,
-                                          size: 12,
-                                        ),
+                                          const Row(children: [
+                                            Icon(
+                                              Icons.menu,
+                                              color: Colors.black,
+                                              size: 12,
+                                            ),
+                                            SizedBox(width: 15),
+                                            Icon(
+                                              Icons.attachment,
+                                              color: Colors.black,
+                                              size: 12,
+                                            ),
+                                          ]),
                                       ],
                                     ),
                                   ],
@@ -696,15 +699,17 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.grey,
                     ),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         // Handle import logic
-                        _attachTaskFile(context);
+                        int imported = await _attachTaskFile(context);
                         _taskController.getTasks();
                         Get.back();
-                        Get.snackbar("Success", "Task List Imported !",
-                            snackPosition: SnackPosition.TOP,
-                            backgroundColor: Colors.white,
-                            icon: const Icon(Icons.warning_amber_rounded));
+                        if (imported == 1) {
+                          Get.snackbar("Success", "Task List Imported !",
+                              snackPosition: SnackPosition.TOP,
+                              backgroundColor: Colors.white,
+                              icon: const Icon(Icons.warning_amber_rounded));
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
@@ -751,15 +756,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   // to import db file
-  _attachTaskFile(BuildContext context) async {
+  Future<int> _attachTaskFile(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
       allowedExtensions: ['zip'],
     );
+    // if nothing selected
+    if (result == null) {
+      return 0;
+    }
 
     await importDatabaseAndAttachments(result!);
     result = null;
+    return 1;
   }
 
   // to export db file
@@ -769,16 +779,19 @@ class _HomePageState extends State<HomePage> {
     await createZipArchive(_taskController.taskList);
   }
 
-  _scheduleNotificationsForDueTasks(List<Task> taskList) {
-    for (Task task in taskList) {
+  _scheduleNotificationsForDueTasks(List<Task>? taskList) {
+    for (Task task in taskList!) {
+      if (task.remind == null) {
+        continue;
+      }
       List<String>? dateParts = task.taskDate?.split('/');
       List<String>? timeParts = task.taskTime?.split(':');
       int day = int.parse(dateParts![0]);
       int month = int.parse(dateParts![1]);
       int year = int.parse(dateParts![2]);
       int hour = int.parse(timeParts![0]);
-      int mins = int.parse(timeParts[1]);
-      DateTime taskDate = DateTime(year, month, day, hour, mins);
+      int minutes = int.parse(timeParts[1]);
+      DateTime taskDate = DateTime(year, month, day, hour, minutes);
       int remindDays = int.parse(task.remind!.split(' ')[0]);
 
       // Calculate the notification date based on the remindDays
