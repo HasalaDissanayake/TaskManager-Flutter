@@ -105,7 +105,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // to create a zip file with db and attachments
-  Future<void> createZipArchive(List<Task> taskList) async {
+  Future<String> createZipArchive(List<Task> taskList) async {
     final externalStorageDir = await getExternalStorageDirectory();
     final archive = Archive();
 
@@ -146,6 +146,7 @@ class _HomePageState extends State<HomePage> {
     await zipFile?.writeAsBytes(ZipEncoder().encode(archive) ?? <int>[]);
 
     print('ZIP archive created at: ${zipFile?.path}');
+    return zipFile!.path;
   }
 
   // when importing zip, unzip and copy content to app storage
@@ -758,13 +759,13 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   // Handle export logic
-                  _exportTaskFile(context);
+                  String path = await _exportTaskFile(context);
                   Get.back();
                   Get.snackbar(
                     "Success",
-                    "Task List Exported to ${zipFile?.path}",
+                    "Task List Exported to $path",
                     snackPosition: SnackPosition.TOP,
                     backgroundColor: Colors.white,
                     icon: const Icon(Icons.warning_amber_rounded),
@@ -809,10 +810,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   // to export db file
-  _exportTaskFile(BuildContext context) async {
+  Future<String> _exportTaskFile(BuildContext context) async {
     await exportDatabase(context);
     await copyImagesToExportDirectory(_taskController.taskList);
-    await createZipArchive(_taskController.taskList);
+    return await createZipArchive(_taskController.taskList);
   }
 
   _scheduleNotificationsForDueTasks(List<Task>? taskList) {
