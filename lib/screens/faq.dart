@@ -21,7 +21,7 @@ class _FaqPageState extends State<FaqPage> {
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Help & Support',
@@ -107,6 +107,7 @@ class _FaqPageState extends State<FaqPage> {
         ),
         content: Text(
           answers[index],
+          textAlign: TextAlign.left,
           style: const TextStyle(
               color: Colors.grey, fontSize: 14, fontWeight: FontWeight.normal),
         ),
