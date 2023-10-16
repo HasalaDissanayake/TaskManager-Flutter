@@ -50,6 +50,9 @@ class _HomePageState extends State<HomePage> {
     'Low': Colors.green,
   };
 
+  File? zipFile;
+  File? existingFile;
+
   DateTime? selectedDate = DateTime.now();
   int? selectedPriority;
   String? selectedCategory;
@@ -81,7 +84,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // export attachments
-  Future<void> copyImagesToExportDirectory(RxList<Task> taskList) async {
+  Future<void> copyImagesToExportDirectory(List<Task> taskList) async {
     // Get directory where images are stored
     final originalDirectory = await getAppStorageDirectory();
     final externalStorageDir = await getExternalStorageDirectory();
@@ -102,9 +105,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   // to create a zip file with db and attachments
-  Future<void> createZipArchive(RxList<Task> taskList) async {
+  Future<void> createZipArchive(List<Task> taskList) async {
     final externalStorageDir = await getExternalStorageDirectory();
-    const downloadsDir = '/storage/emulated/0/Download';
     final archive = Archive();
 
     // Add the SQLite database to the archive
@@ -123,16 +125,32 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // Create the ZIP file
-    final zipFile = File('$downloadsDir/exported_data.zip');
-    await zipFile.writeAsBytes(ZipEncoder().encode(archive) ?? <int>[]);
+    // to store the zip file in the Download folder
+    Directory downloadDirectory;
 
-    print('ZIP archive created at: ${zipFile.path}');
+    if (Platform.isIOS) {
+      downloadDirectory = await getApplicationDocumentsDirectory();
+    } else {
+      downloadDirectory = Directory('/storage/emulated/0/Download');
+      if (!await downloadDirectory.exists()) {
+        downloadDirectory = externalStorageDir;
+      }
+    }
+
+    // Create the ZIP file
+    zipFile = File('${downloadDirectory!.path}/exported_data.zip');
+    existingFile = zipFile;
+    if (await existingFile!.exists()) {
+      await existingFile?.delete();
+    }
+    await zipFile?.writeAsBytes(ZipEncoder().encode(archive) ?? <int>[]);
+
+    print('ZIP archive created at: ${zipFile?.path}');
   }
 
   // when importing zip, unzip and copy content to app storage
   Future<void> importDatabaseAndAttachments(FilePickerResult result) async {
-    if (result != null && result.files.isNotEmpty) {
+    if (result.files.isNotEmpty) {
       final dbFilePath = await getDatabasesPath();
       final zipFile = File(result.files.first.path!);
 
@@ -146,7 +164,7 @@ class _HomePageState extends State<HomePage> {
           if (file.name == 'backup.db') {
             final dbPath = '$dbFilePath/task_database.db';
             final dbFile = File(dbPath);
-            await dbFile.writeAsBytes(data, flush: true);
+            await dbFile.writeAsBytes(data);
             print('Database imported to: $dbPath');
           } else {
             final originalDirectory = await getAppStorageDirectory();
@@ -706,8 +724,7 @@ class _HomePageState extends State<HomePage> {
                     ElevatedButton(
                       onPressed: () async {
                         // Handle import logic
-                        int imported = await _attachTaskFile(context);
-                        _taskController.getTasks();
+                        int imported = await _attachTaskFile();
                         Get.back();
                         if (imported == 1) {
                           Get.snackbar(
@@ -747,7 +764,7 @@ class _HomePageState extends State<HomePage> {
                   Get.back();
                   Get.snackbar(
                     "Success",
-                    "Task List Exported !",
+                    "Task List Exported to ${zipFile?.path}",
                     snackPosition: SnackPosition.TOP,
                     backgroundColor: Colors.white,
                     icon: const Icon(Icons.warning_amber_rounded),
@@ -769,7 +786,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   // to import db file
-  Future<int> _attachTaskFile(BuildContext context) async {
+  Future<int> _attachTaskFile() async {
+    // to delete cache if its there
+    final directory = await getTemporaryDirectory();
+    final filePickerPath = Directory("${directory.path}/file_picker");
+    filePickerPath.delete(recursive: true);
+
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
@@ -780,7 +802,8 @@ class _HomePageState extends State<HomePage> {
       return 0;
     }
 
-    await importDatabaseAndAttachments(result!);
+    await importDatabaseAndAttachments(result);
+    _taskController.getTasks();
     result = null;
     return 1;
   }
