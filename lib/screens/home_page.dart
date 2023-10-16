@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:taskmanager/controllers/task_controller.dart';
 import 'package:taskmanager/models/task.dart';
@@ -70,7 +71,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // export database
-  Future<void> exportDatabase(BuildContext context) async {
+  Future<void> exportDatabase() async {
     // Get the path to the current database file
     final databasePath = await getDatabasesPath();
     final path = join(databasePath, 'task_database.db');
@@ -761,16 +762,25 @@ class _HomePageState extends State<HomePage> {
               ElevatedButton(
                 onPressed: () async {
                   // Handle export logic
-                  String path = await _exportTaskFile(context);
+                  String? path = await _exportTaskFile(context);
                   Get.back();
-                  Get.snackbar(
-                    "Success",
-                    "Task List Exported to $path",
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.white,
-                    icon: const Icon(Icons.warning_amber_rounded),
-                    margin: const EdgeInsets.all(25.0),
-                  );
+                  path != null
+                      ? Get.snackbar(
+                          "Success",
+                          "Task List Exported to $path",
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.white,
+                          icon: const Icon(Icons.warning_amber_rounded),
+                          margin: const EdgeInsets.all(25.0),
+                        )
+                      : Get.snackbar(
+                          "Permission Denied",
+                          "Please provide storage access permission",
+                          snackPosition: SnackPosition.TOP,
+                          backgroundColor: Colors.white,
+                          icon: const Icon(Icons.warning_amber_rounded),
+                          margin: const EdgeInsets.all(25.0),
+                        );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -810,10 +820,23 @@ class _HomePageState extends State<HomePage> {
   }
 
   // to export db file
-  Future<String> _exportTaskFile(BuildContext context) async {
-    await exportDatabase(context);
-    await copyImagesToExportDirectory(_taskController.taskList);
-    return await createZipArchive(_taskController.taskList);
+  Future<String?> _exportTaskFile(BuildContext context) async {
+    //see if the permission is already granted
+    var status = await Permission.storage.status;
+    if (status.isGranted) {
+      await exportDatabase();
+      await copyImagesToExportDirectory(_taskController.taskList);
+      return await createZipArchive(_taskController.taskList);
+    } else {
+      var request = await Permission.storage.request();
+      if (request.isGranted) {
+        await exportDatabase();
+        await copyImagesToExportDirectory(_taskController.taskList);
+        return await createZipArchive(_taskController.taskList);
+      } else {
+        return null;
+      }
+    }
   }
 
   _scheduleNotificationsForDueTasks(List<Task>? taskList) {

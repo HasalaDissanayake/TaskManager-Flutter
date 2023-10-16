@@ -52,6 +52,7 @@ dependencies:
   path:
   archive:
   awesome_notifications:
+  permission_handler:
 
 dev_dependencies:
   flutter_test:
