@@ -380,9 +380,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 ),
                               );
                       },
-                      child: Text(
-                        selectedFileName!,
-                        style: const TextStyle(fontSize: 18.0),
+                      child: SizedBox(
+                        width: 300,
+                        child: Text(
+                          selectedFileName!,
+                          style: const TextStyle(fontSize: 15.0),
+                        ),
                       ),
                     ),
                     IconButton(

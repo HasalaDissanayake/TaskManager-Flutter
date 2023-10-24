@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:date_picker_timeline/date_picker_widget.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -17,6 +18,7 @@ import 'package:taskmanager/screens/add_new_task.dart';
 import 'package:taskmanager/screens/faq.dart';
 import 'package:taskmanager/screens/task_view.dart';
 import 'package:taskmanager/services/notification_service.dart';
+import 'package:uuid/uuid.dart';
 
 import 'completed_tasks_list.dart';
 
@@ -137,12 +139,13 @@ class _HomePageState extends State<HomePage> {
         downloadDirectory = externalStorageDir;
       }
     }
+    var uuid = const Uuid();
 
     // Create the ZIP file
-    zipFile = File('${downloadDirectory!.path}/exported_data.zip');
-    existingFile = zipFile;
-    if (await existingFile!.exists()) {
-      await existingFile?.delete();
+    zipFile = File('${downloadDirectory!.path}/task_data_${uuid.v4()}.zip');
+
+    if (await zipFile!.exists()) {
+      await zipFile?.delete();
     }
     await zipFile?.writeAsBytes(ZipEncoder().encode(archive) ?? <int>[]);
 
@@ -821,21 +824,30 @@ class _HomePageState extends State<HomePage> {
 
   // to export db file
   Future<String?> _exportTaskFile(BuildContext context) async {
+    //check the sdk version
+    DeviceInfoPlugin plugin = DeviceInfoPlugin();
+    AndroidDeviceInfo androidDeviceInfo = await plugin.androidInfo;
     //see if the permission is already granted
-    var status = await Permission.storage.status;
-    if (status.isGranted) {
-      await exportDatabase();
-      await copyImagesToExportDirectory(_taskController.taskList);
-      return await createZipArchive(_taskController.taskList);
-    } else {
-      var request = await Permission.storage.request();
-      if (request.isGranted) {
+    if (androidDeviceInfo.version.sdkInt < 33) {
+      var status = await Permission.storage.status;
+      if (status.isGranted) {
         await exportDatabase();
         await copyImagesToExportDirectory(_taskController.taskList);
         return await createZipArchive(_taskController.taskList);
       } else {
-        return null;
+        var request = await Permission.storage.request();
+        if (request.isGranted) {
+          await exportDatabase();
+          await copyImagesToExportDirectory(_taskController.taskList);
+          return await createZipArchive(_taskController.taskList);
+        } else {
+          return null;
+        }
       }
+    } else {
+      await exportDatabase();
+      await copyImagesToExportDirectory(_taskController.taskList);
+      return await createZipArchive(_taskController.taskList);
     }
   }
 
