@@ -1,5 +1,6 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 
+// initializing notification helper
 class NotifyHelper {
   scheduleNotification(
       int? id, String? title, String? taskDate, DateTime scheduleTime) async {

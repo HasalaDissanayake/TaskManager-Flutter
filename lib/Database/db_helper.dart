@@ -6,6 +6,7 @@ class DBHelper {
   static const int _version = 1;
   static const String _tableName = "tasks";
 
+  // initiate database
   static Future<void> initDb() async {
     if (_db != null) {
       return;

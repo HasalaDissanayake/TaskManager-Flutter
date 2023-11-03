@@ -553,7 +553,6 @@ class _HomePageState extends State<HomePage> {
                               "${selectedDate?.day}/${selectedDate?.month}/${selectedDate?.year}") {
                             return GestureDetector(
                               onTap: () {
-                                print(task.toJson());
                                 Get.to(
                                   () => const TaskPageView(),
                                   arguments: task,
@@ -610,7 +609,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       const SizedBox(width: 15),
-                                      // for the icon shown in task list for descriptions and attachemnts
+                                      // for the icon shown in task list for descriptions and attachments
                                       Row(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
@@ -667,8 +666,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         Positioned(
-          bottom: 16.0, // Adjust the position as needed
-          right: 16.0, // Adjust the position as needed
+          bottom: 16.0,
+          right: 16.0,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -681,7 +680,7 @@ class _HomePageState extends State<HomePage> {
                 heroTag: "faqBtn",
                 child: const Icon(Icons.help),
               ),
-              const SizedBox(width: 16.0), // Add some spacing between buttons
+              const SizedBox(width: 16.0),
               FloatingActionButton(
                 onPressed: () async {
                   await Get.to(() => const AddTaskPage());
@@ -735,6 +734,15 @@ class _HomePageState extends State<HomePage> {
                           Get.snackbar(
                             "Success",
                             "Task List Imported !",
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.white,
+                            icon: const Icon(Icons.warning_amber_rounded),
+                            margin: const EdgeInsets.all(25.0),
+                          );
+                        } else {
+                          Get.snackbar(
+                            "Error",
+                            "Please Try Again !",
                             snackPosition: SnackPosition.TOP,
                             backgroundColor: Colors.white,
                             icon: const Icon(Icons.warning_amber_rounded),
@@ -851,6 +859,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // to schedule task for notifications
   _scheduleNotificationsForDueTasks(List<Task>? taskList) {
     for (Task task in taskList!) {
       if (task.remind == null) {

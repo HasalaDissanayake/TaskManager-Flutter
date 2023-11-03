@@ -111,7 +111,6 @@ class _TaskPageViewState extends State<TaskPageView> {
     relativePath = task.attachment;
 
     selectedFileName = relativePath?.split('/').last;
-    print(selectedFileName);
   }
 
   @override
@@ -678,6 +677,7 @@ class _TaskPageViewState extends State<TaskPageView> {
     );
   }
 
+  // attach a file to a task
   _handleAttach(BuildContext context) async {
     final appStorageDir = await getAppStorageDirectory();
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -713,7 +713,7 @@ class _TaskPageViewState extends State<TaskPageView> {
       _taskController.getTasks();
       Get.back();
     } else if (_titleController.text.isEmpty) {
-      Get.snackbar("Required", "All fields are required !",
+      Get.snackbar("Required", "Please add a task title !",
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.white,
           icon: const Icon(Icons.warning_amber_rounded));
@@ -741,6 +741,7 @@ class _TaskPageViewState extends State<TaskPageView> {
     ));
   }
 
+  // toggle due date
   _dueDateSwitch() {
     return Switch(
       value: switchDateValue,
@@ -762,6 +763,7 @@ class _TaskPageViewState extends State<TaskPageView> {
     );
   }
 
+  // toggle due time
   _dueTimeSwitch() {
     return Switch(
       value: switchTimeValue,

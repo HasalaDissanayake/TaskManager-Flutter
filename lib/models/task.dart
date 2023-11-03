@@ -23,6 +23,7 @@ class Task {
     this.attachment,
   });
 
+  // convert from json
   Task.fromJson(Map<String, dynamic> json) {
     taskId = json['task_id'];
     taskTitle = json['task_title'];
@@ -36,6 +37,7 @@ class Task {
     attachment = json['attachment'];
   }
 
+  // map retrieved data to json
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['task_id'] = taskId;

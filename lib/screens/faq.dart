@@ -86,6 +86,7 @@ class _FaqPageState extends State<FaqPage> {
       'Yes, You can attach files to your tasks.',
     ];
 
+    // generate a list of FAQs
     return List<AccordionSection>.generate(questions.length, (index) {
       return AccordionSection(
         rightIcon: const Icon(
