@@ -82,7 +82,7 @@ class _FaqPageState extends State<FaqPage> {
       'This app is designed to help users efficiently manage and organize their tasks, ensuring they stay on top of their to-do lists and priorities.',
       'You can create a task using + icon in the bottom of the home.',
       'Yes, You can categorize your task using "Select Category" dropdown menu.',
-      'This app is designed to help users efficiently manage and organize their tasks, ensuring they stay on top of their to-do lists and priorities.',
+      'You can choose Remind option in the create task and select your preference.',
       'Yes, You can attach files to your tasks.',
     ];
 
